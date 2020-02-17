@@ -6923,3 +6923,496 @@ class Solution {
 }
 ```
 
+# 链表
+
+## 单链表
+
+### 设计链表leetcode 707
+
+设计链表的实现。您可以选择使用单链表或双链表。单链表中的节点应该具有两个属性：`val` 和 `next`。`val` 是当前节点的值，`next` 是指向下一个节点的指针/引用。如果要使用双向链表，则还需要一个属性 `prev` 以指示链表中的上一个节点。假设链表中的所有节点都是 0-index 的。
+
+在链表类中实现这些功能：
+
+- get(index)：获取链表中第 `index` 个节点的值。如果索引无效，则返回`-1`。
+- addAtHead(val)：在链表的第一个元素之前添加一个值为 `val` 的节点。插入后，新节点将成为链表的第一个节点。
+- addAtTail(val)：将值为 `val` 的节点追加到链表的最后一个元素。
+- addAtIndex(index,val)：在链表中的第 `index` 个节点之前添加值为 `val` 的节点。如果 `index` 等于链表的长度，则该节点将附加到链表的末尾。如果 `index` 大于链表长度，则不会插入节点。如果`index`小于0，则在头部插入节点。
+- deleteAtIndex(index)：如果索引 `index` 有效，则删除链表中的第 `index` 个节点。
+
+**示例：**
+
+```java
+MyLinkedList linkedList = new MyLinkedList();
+linkedList.addAtHead(1);
+linkedList.addAtTail(3);
+linkedList.addAtIndex(1,2);   //链表变为1-> 2-> 3
+linkedList.get(1);            //返回2
+linkedList.deleteAtIndex(1);  //现在链表是1-> 3
+linkedList.get(1);            //返回3
+```
+
+**提示：**
+
+- 所有`val`值都在 `[1, 1000]` 之内。
+- 操作次数将在 `[1, 1000]` 之内。
+- 请不要使用内置的 LinkedList 库。
+
+**解法：**
+
+```java
+class MyLinkedList {
+    class Node {
+        int val;
+        Node next;
+        Node(int val) { this.val = val; }
+    }
+
+    Node head = new Node(0);
+
+    public MyLinkedList() { }
+
+    public int get(int index) {
+        Node node = head;
+        for (int i = 0; i <= index; i++) {
+            if (node.next == null) return -1;
+            node = node.next;
+        }
+        return node.val;
+    }
+
+    public void addAtHead(int val) {
+        Node node = new Node(val);
+        node.next = head.next;
+        head.next = node;
+    }
+
+    public void addAtTail(int val) {
+        Node tail = head;
+        while (tail.next != null) tail = tail.next;
+        tail.next = new Node(val);
+    }
+
+    public void addAtIndex(int index, int val) {
+        Node pre = head;
+        for (int i = 0; i < index; i++) {
+            if (pre.next == null) return;
+            pre = pre.next;
+        }   // 找到位置
+        Node node = new Node(val);
+        Node tmp = pre.next;    // 插入操作
+        pre.next = node;
+        node.next = tmp;
+    }
+
+    public void deleteAtIndex(int index) {
+        Node pre = head;
+        for (int i = 0; i < index; i++) {
+            if (pre.next == null) return;
+            pre = pre.next;
+        }
+        if (pre.next != null) pre.next = pre.next.next;
+    }
+}
+```
+
+## 双指针技巧
+
+### 链表中的双指针
+
+让我们从一个经典问题开始：
+
+> 给定一个链表，判断链表中是否有环。
+
+你可能已经使用`哈希表`提出了解决方案。但是，使用`双指针技巧`有一个更有效的解决方案。在阅读接下来的内容之前，试着自己仔细考虑一下。
+
+想象一下，有两个速度不同的跑步者。如果他们在直路上行驶，快跑者将首先到达目的地。但是，如果它们在圆形跑道上跑步，那么快跑者如果继续跑步就会追上慢跑者。
+
+这正是我们在链表中使用两个速度不同的指针时会遇到的情况：
+
+1. `如果没有环，快指针将停在链表的末尾。`
+2. `如果有环，快指针最终将与慢指针相遇。`
+
+所以剩下的问题是：
+
+> 这两个指针的适当速度应该是多少？
+
+一个安全的选择是每次移动慢指针`一步`，而移动快指针`两步`。每一次迭代，快速指针将额外移动一步。如果环的长度为 *M*，经过 *M* 次迭代后，快指针肯定会多绕环一周，并赶上慢指针。
+
+> 那其他选择呢？它们有用吗？它们会更高效吗？
+
+### 环形链表leetcode 141
+
+给定一个链表，判断链表中是否有环。
+
+为了表示给定链表中的环，我们使用整数 `pos` 来表示链表尾连接到链表中的位置（索引从 0 开始）。 如果 `pos` 是 `-1`，则在该链表中没有环。
+
+**示例 1：**
+
+```c
+输入：head = [3,2,0,-4], pos = 1
+输出：true
+解释：链表中有一个环，其尾部连接到第二个节点。
+```
+
+**解法：**
+
+慢指针每次走一格，快指针每次走两格，判断快指针是否会赶上慢指针。
+
+```java
+public class Solution {
+    public boolean hasCycle(ListNode head) {
+        if (head == null) return false;
+        ListNode slow = head;
+        ListNode fast = head;
+        while (fast.next != null && fast.next.next != null){
+            slow = slow.next;
+            fast = fast.next.next;
+            if (slow.val == fast.val)
+                return true;
+        }
+        return false;
+    }
+}
+```
+
+### 环形链表II leetcode 142
+
+给定一个链表，返回链表开始入环的第一个节点。 如果链表无环，则返回 `null`。
+
+为了表示给定链表中的环，我们使用整数 `pos` 来表示链表尾连接到链表中的位置（索引从 0 开始）。 如果 `pos` 是 `-1`，则在该链表中没有环。
+
+**说明：**不允许修改给定的链表。
+
+**示例 1：**
+
+```
+输入：head = [3,2,0,-4], pos = 1
+输出：tail connects to node index 1
+解释：链表中有一个环，其尾部连接到第二个节点。
+```
+
+**解法：**
+
+分为两个步骤：
+
+- 步骤1：找到快慢指针相遇的点
+- 步骤2：两个指针分别从头结点和相遇点同时出发，用相同速度，再次相遇的点即为尾部连接到的点。
+
+正确性证明：
+
+![](img/19.png)
+
+```java
+public class Solution {
+    // 获取相交点，即快慢指针相遇的结点
+    private ListNode getIntersection(ListNode head){
+        ListNode slow = head;
+        ListNode fast = head;
+        while(fast != null && fast.next != null){
+            slow = slow.next;
+            fast = fast.next.next;
+            if (slow == fast) return fast;
+        }
+        return null;
+    }
+
+    public ListNode detectCycle(ListNode head) {
+        if (head == null) return head;
+        ListNode intersect = getIntersection(head);
+        if (intersect == null) return null;
+
+        while (head != intersect){
+            head = head.next;
+            intersect = intersect.next;
+        }
+        return head;
+    }
+}
+```
+
+### 相交链表leetcode 160
+
+编写一个程序，找到两个单链表相交的起始节点。
+
+如：
+
+![](img/20.png)
+
+在结点c1开始相交
+
+**注意：**
+
+- 如果两个链表没有交点，返回 `null`.
+- 在返回结果后，两个链表仍须保持原有的结构。
+- 可假定整个链表结构中没有循环。
+- 程序尽量满足 O(*n*) 时间复杂度，且仅用 O(*1*) 内存。
+
+**解法：**
+
+把两个链表A、B，分别按照AB和BA的方法拼起来之后，长度是相等的。如果尾部元素相同，那么后几个元素也应该对应相同，如示例中的：
+
+- AB 排： a1 a2 c1 c2 c3 b1 b2 b3 c1 c2 c3
+- BA 排： b1 b2 b3 c1 c2 c3 a1 a2 c1 c2 c3
+
+显然，末尾的c1 c2 c3是相同的，所以从c1开始相交。
+
+虽起点不同，路径不同，但速度相同，路程相同，错的人迟早走散，对的人必定相逢。
+
+```java
+public class Solution {
+    public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
+        ListNode node1 = headA;
+        ListNode node2 = headB;
+
+        while (node1 != node2) {
+            if (node1 == null) node1 = headB;
+            else node1 = node1.next;
+            if (node2 == null) node2 = headA;
+            else node2 = node2.next;
+        }
+        return node1;
+    }
+}
+```
+
+### 删除链表的倒数第N个节点leetcode 19
+
+给定一个链表，删除链表的倒数第 *n* 个节点，并且返回链表的头结点。
+
+**示例：**
+
+```
+给定一个链表: 1->2->3->4->5, 和 n = 2.
+
+当删除了倒数第二个节点后，链表变为 1->2->3->5.
+```
+
+**说明：**
+
+给定的 *n* 保证是有效的。
+
+**进阶：**
+
+你能尝试使用一趟扫描实现吗？
+
+**解法：**
+
+两趟扫描：第一次算出长度，第二次删除第 **长度 - n** 个节点(从0开始数)。
+
+一趟扫描：使用双指针法，快指针领先慢指针 n + 1 格，快指针到末尾null时，删除慢指针的后继
+
+```java
+class Solution {
+    public ListNode removeNthFromEnd(ListNode head, int n) {
+        ListNode dummy = new ListNode(0);
+        dummy.next = head;  // dummy是头结点 leetcode的head有值
+        ListNode slow = dummy;
+        ListNode fast = dummy;
+        for (int i = 0; i < n + 1; i++)
+            fast = fast.next;   // 快指针快 n + 1 格
+        while (fast != null){
+            fast = fast.next;
+            slow = slow.next;
+        }   // 快慢指针同时移动
+
+        slow.next = slow.next.next; // 删除slow的后继
+        return dummy.next;  // 细节，删除head时，写head就错了
+    }
+}
+```
+
+## 经典问题
+
+### 反转链表leetcode 206
+
+反转一个单链表。
+
+**示例:**
+
+```
+输入: 1->2->3->4->5->NULL
+输出: 5->4->3->2->1->NULL
+```
+
+**进阶:**
+你可以迭代或递归地反转链表。你能否用两种方法解决这道题？
+
+**解法：**
+
+可以逐个删除元素，在头插，也可以直接从前到后的反转每一个指针。
+
+```java
+class Solution {
+    public ListNode reverseList(ListNode head) {
+        // 存储前一个结点
+        ListNode pre = null;
+        ListNode cur = head;
+        while (cur != null){
+            ListNode temp = cur.next; // 存储后一个结点
+            cur.next = pre; // 当前节点后继改为前一个结点
+            // 改变pre和cur
+            pre = cur;
+            cur = temp;
+        }
+        // 返回最后一个结点
+        return pre;
+    }
+}
+```
+
+### 移除链表元素leetcode 203
+
+删除链表中等于给定值 **val** 的所有节点。
+
+**示例:**
+
+```
+输入: 1->2->6->3->4->5->6, val = 6
+输出: 1->2->3->4->5
+```
+
+**解法：**
+
+```java
+class Solution {
+    public ListNode removeElements(ListNode head, int val) {
+        ListNode dummy = new ListNode(0);
+        dummy.next = head;
+        ListNode pre = dummy;   // 当前节点的前一个
+        ListNode cur = head;    // 当前节点
+        while (cur != null) {   // 循环判断cur是不是要删除的元素
+            if (cur.val == val) {   // cur是要删除的元素
+                pre.next = pre.next.next;   // 删除
+                cur = pre.next;     // 只有cur向后一格
+            } else {    // cur不是
+                cur = cur.next; // 都向后一格
+                pre = pre.next;
+            }
+        }
+        return dummy.next;
+    }
+}
+```
+
+### 奇偶链表leetcode 328
+
+给定一个单链表，把所有的奇数节点和偶数节点分别排在一起。请注意，这里的奇数节点和偶数节点指的是节点编号的奇偶性，而不是节点的值的奇偶性。
+
+请尝试使用原地算法完成。你的算法的空间复杂度应为 O(1)，时间复杂度应为 O(nodes)，nodes 为节点总数。
+
+**示例 1:**
+
+```
+输入: 1->2->3->4->5->NULL
+输出: 1->3->5->2->4->NULL
+```
+
+**示例 2:**
+
+```
+输入: 2->1->3->5->6->4->7->NULL 
+输出: 2->3->6->7->1->5->4->NULL
+```
+
+**说明:**
+
+- 应当保持奇数节点和偶数节点的相对顺序。
+- 链表的第一个节点视为奇数节点，第二个节点视为偶数节点，以此类推。
+
+**解法：**
+
+快慢指针法，快指针找处在奇数位置的结点，并存入temp变量，插入到慢指针后面。
+
+```java
+class Solution {
+    public ListNode oddEvenList(ListNode head) {
+        if (head == null) return null;
+        ListNode fast = head;   // 快指针找奇数结点
+        ListNode slow = head;   // 慢指针存奇数结点
+        while (fast.next != null && fast.next.next != null) {
+            // 把第奇数个结点从链表上取下来
+            fast = fast.next;   // 隔一个结点去一个
+            ListNode temp = fast.next;  // 把要取下的结点存到temp
+            fast.next = fast.next.next; // 取下结点
+            // 把取下的结点挂到slow后面
+            temp.next = slow.next;
+            slow.next = temp;
+            slow = slow.next; // 更新slow
+        }
+        return head;
+    }
+}
+```
+
+### 回文链表leetcode 234
+
+请判断一个链表是否为回文链表。
+
+**示例 1:**
+
+```
+输入: 1->2
+输出: false
+```
+
+**示例 2:**
+
+```
+输入: 1->2->2->1
+输出: true
+```
+
+**进阶：**
+你能否用 O(n) 时间复杂度和 O(1) 空间复杂度解决此题？
+
+**解法：**
+
+分成相等的两半，反转后半部分链表，然后快慢指针比较。
+
+步骤：1.找到后半部分 2.旋转后半部分 3.判断是否为回文 4.还原后半部分 5.返回结果
+
+```java
+class Solution {
+    // 获取后半部分的前一个元素
+    private ListNode getPart1Tail(ListNode head) {
+        ListNode slow = head;
+        ListNode fast = head;
+        while (fast.next != null && fast.next.next != null) {
+            slow = slow.next;
+            fast = fast.next.next;
+        }
+        return slow;
+    }
+
+    // 反转后半部分链表 leetcode 206
+    private ListNode reverse(ListNode head) {
+        ListNode pre = null;
+        ListNode cur = head;
+        while (cur != null) {
+            ListNode temp = cur.next; // 存储后一个结点
+            cur.next = pre; // 当前节点后继改为前一个结点
+            pre = cur;  // 改变pre和cur
+            cur = temp;
+        }
+        return pre; // 返回最后一个结点
+    }
+
+    public boolean isPalindrome(ListNode head) {
+        if (head == null) return true;
+        ListNode part1Tail = getPart1Tail(head);
+        ListNode part2 = part1Tail.next;
+        ListNode reversedPart2 = reverse(part2);
+        // 判断前半部分和反转后的后半部分是否相等
+        boolean res = true;
+        while (res && reversedPart2 != null) {
+            if (head.val != reversedPart2.val) res = false;
+            head = head.next;
+            reversedPart2 = reversedPart2.next;
+        }
+        // 把后半部分还原
+        part1Tail.next = reverse(part1Tail.next);
+        return res;
+    }
+}
+```
+
