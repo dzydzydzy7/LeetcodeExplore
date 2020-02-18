@@ -7416,3 +7416,352 @@ class Solution {
 }
 ```
 
+## 双链表
+
+### 设计链表leetcode 707
+
+设计链表的实现。您可以选择使用单链表或双链表。单链表中的节点应该具有两个属性：`val` 和 `next`。`val` 是当前节点的值，`next` 是指向下一个节点的指针/引用。如果要使用双向链表，则还需要一个属性 `prev` 以指示链表中的上一个节点。假设链表中的所有节点都是 0-index 的。
+
+在链表类中实现这些功能：
+
+- get(index)：获取链表中第 `index` 个节点的值。如果索引无效，则返回`-1`。
+- addAtHead(val)：在链表的第一个元素之前添加一个值为 `val` 的节点。插入后，新节点将成为链表的第一个节点。
+- addAtTail(val)：将值为 `val` 的节点追加到链表的最后一个元素。
+- addAtIndex(index,val)：在链表中的第 `index` 个节点之前添加值为 `val` 的节点。如果 `index` 等于链表的长度，则该节点将附加到链表的末尾。如果 `index` 大于链表长度，则不会插入节点。如果`index`小于0，则在头部插入节点。
+- deleteAtIndex(index)：如果索引 `index` 有效，则删除链表中的第 `index` 个节点。
+
+**示例：**
+
+```java
+MyLinkedList linkedList = new MyLinkedList();
+linkedList.addAtHead(1);
+linkedList.addAtTail(3);
+linkedList.addAtIndex(1,2);   //链表变为1-> 2-> 3
+linkedList.get(1);            //返回2
+linkedList.deleteAtIndex(1);  //现在链表是1-> 3
+linkedList.get(1);            //返回3
+```
+
+**提示：**
+
+- 所有`val`值都在 `[1, 1000]` 之内。
+- 操作次数将在 `[1, 1000]` 之内。
+- 请不要使用内置的 LinkedList 库。
+
+**解法：**
+
+这次使用双链表实现。
+
+```java
+class MyLinkedList {
+    static class Node {
+        int val;
+        Node next;
+        Node prev;
+        Node(int val) { this.val = val; }
+    }
+
+    Node head = new Node(0);
+    Node tail = new Node(0);
+    int size = 0;
+
+    public MyLinkedList() {
+        head.next = tail;
+        tail.prev = head;
+    }
+
+    public int get(int index) {
+        if (index >= size) return -1;
+        Node node = head;
+        for (int i = 0; i <= index; i++) node = node.next;
+        return node.val;
+    }
+
+    public void addAtHead(int val) {
+        size++;
+        Node node = new Node(val);
+        node.next = head.next;
+        node.prev = head;
+        head.next.prev = node;
+        head.next = node;
+    }
+
+    public void addAtTail(int val) {
+        size++;
+        Node node = new Node(val);
+        node.next = tail;
+        node.prev = tail.prev;
+        tail.prev.next = node;
+        tail.prev = node;
+    }
+
+    public void addAtIndex(int index, int val) {
+        if (index > size) return;
+        size++;
+        Node pre = head;
+        for (int i = 0; i < index; i++)
+            pre = pre.next; // 找到位置
+        Node node = new Node(val);// 插入操作
+        node.next = pre.next;
+        node.prev = pre;
+        pre.next.prev = node;
+        pre.next = node;
+    }
+
+    public void deleteAtIndex(int index) {
+        if (index < 0 || index >= size) return;
+        size--;
+        Node pre = head;
+        for (int i = 0; i < index; i++) pre = pre.next;
+
+        pre.next.next.prev = pre;
+        pre.next= pre.next.next;
+    }
+}
+```
+
+## 小结
+
+### 合并两个有序链表leetcode 21
+
+将两个有序链表合并为一个新的有序链表并返回。新链表是通过拼接给定的两个链表的所有节点组成的。 
+
+**示例：**
+
+```java
+输入：1->2->4, 1->3->4
+输出：1->1->2->3->4->4
+```
+
+解法：
+
+合并到 L1 上的方法，之前是合并到新的链表上。
+
+把 L2 中的结点插入到 L1 中。
+
+```java
+class Solution {
+    public ListNode mergeTwoLists(ListNode l1, ListNode l2) {
+        ListNode dummy = new ListNode(0);
+        dummy.next = l1;
+        ListNode pre = dummy;   // l1之前的结点
+        while (l1 != null && l2 != null) {
+            if (l2.val < l1.val){
+                ListNode temp = l2.next;    // 暂存l2的后继
+                l2.next = pre.next; // 把l2插入到l1前面
+                pre.next = l2;
+                pre = pre.next;
+                l2 = temp;
+            }else {
+                l1 = l1.next;
+                pre = pre.next;
+            }
+        }
+        if (l1 != null) pre.next = l1;
+        else pre.next = l2;
+        return dummy.next;
+    }
+}
+```
+
+ ### 两数相加leetcode 2
+
+给出两个 **非空** 的链表用来表示两个非负的整数。其中，它们各自的位数是按照 **逆序** 的方式存储的，并且它们的每个节点只能存储 **一位** 数字。
+
+如果，我们将这两个数相加起来，则会返回一个新的链表来表示它们的和。
+
+您可以假设除了数字 0 之外，这两个数都不会以 0 开头。
+
+**示例：**
+
+```java
+输入：(2 -> 4 -> 3) + (5 -> 6 -> 4)
+输出：7 -> 0 -> 8
+原因：342 + 465 = 807
+```
+
+**解法：**
+
+```java
+class Solution {
+    public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
+        int jinwei = 0; // 进位
+        int sum = 0;    // 当前位和
+        ListNode node = new ListNode(0);    // 结果列表
+        ListNode resHead = node;
+        while (l1 != null || l2 != null) {
+            // 各种情况下计算当前位和的方法
+            if (l1 == null) sum = l2.val + jinwei;
+            else if (l2 == null) sum = l1.val + jinwei;
+            else sum = l1.val + l2.val + jinwei;
+            // 计算进位，向结果中添加结点
+            jinwei = sum / 10;
+            node.next = new ListNode(sum % 10);
+            // 各自向后移位
+            node = node.next;
+            if (l1 != null) l1 = l1.next;
+            if (l2 != null) l2 = l2.next;
+        }
+        // 如果还有进位，要放到最高位
+        if (jinwei != 0) node.next = new ListNode(1);
+        return resHead.next;
+    }
+}
+```
+
+### 扁平化多级双向链表leetcode 430
+
+您将获得一个双向链表，除了下一个和前一个指针之外，它还有一个子指针，可能指向单独的双向链表。这些子列表可能有一个或多个自己的子项，依此类推，生成多级数据结构，如下面的示例所示。
+
+扁平化列表，使所有结点出现在单级双链表中。您将获得列表第一级的头部。
+
+**示例:**
+
+```c
+输入:
+ 1---2---3---4---5---6--NULL
+         |
+         7---8---9---10--NULL
+             |
+             11--12--NULL
+
+输出:
+1-2-3-7-8-11-12-9-10-4-5-6-NULL
+```
+
+**解法：**
+
+使用一个栈存储有子链表的结点的后继，如示例中的 4 和 9。
+
+遍历链表，当链表中的结点有子链表时，把当前结点的后继存储到栈中，并将当前节点的后继改为子节点，当子链表遍历完后，子链表的尾部接上栈顶，值的栈空为止。
+
+![](img/21.png)
+
+```java
+class Solution {
+    public Node flatten(Node head) {
+        Stack<Node> stack = new Stack<>();
+        Node node = head;
+        while (node != null) {
+            if (node.child != null){
+                stack.add(node.next);
+                node.next = node.child;
+                node.child.prev = node;
+                node.child = null;
+            } else if (node.next == null){
+                if (stack.isEmpty()) break;;
+                Node tmp = stack.pop();
+                node.next = tmp;
+                if (tmp != null) tmp.prev = node;
+            } else node = node.next;
+        }
+        return head;
+    }
+}
+```
+
+ ### 复制带随机指针的链表leetcode 138
+
+给定一个链表，每个节点包含一个额外增加的随机指针，该指针可以指向链表中的任何节点或空节点。
+
+要求返回这个链表的 **[深拷贝](https://baike.baidu.com/item/深拷贝/22785317?fr=aladdin)**。 
+
+我们用一个由 `n` 个节点组成的链表来表示输入/输出中的链表。每个节点用一个 `[val, random_index]` 表示：
+
+- `val`：一个表示 `Node.val` 的整数。
+- `random_index`：随机指针指向的节点索引（范围从 `0` 到 `n-1`）；如果不指向任何节点，则为 `null` 。
+
+ **示例：**
+
+![](img/22.png)
+
+```
+输入：head = [[7,null],[13,0],[11,4],[10,2],[1,0]]
+输出：[[7,null],[13,0],[11,4],[10,2],[1,0]]
+```
+
+**解法：**
+
+使用一个哈希映射存储 **原节点到复制节点** 的映射。
+
+```java
+class Solution {
+    Map<Node, Node> map = new HashMap<>();  // 原结点-复制后的结点
+
+    // 如果复制过，返回复制的，如果没有复制一个返回，并添加映射
+    private Node getCopyedNode(Node originalNode) {
+        if (originalNode == null) return null;
+        if (!map.containsKey(originalNode))
+            map.put(originalNode, new Node(originalNode.val));
+        return map.get(originalNode);
+    }
+
+    public Node copyRandomList(Node head) {
+        if (head == null) return null;
+        Node node = head;
+        Node copy = getCopyedNode(head);// 复制第一个
+        while (node != null) {  // 一次遍历
+            copy.next = getCopyedNode(node.next);// 复制next
+            copy.random = getCopyedNode(node.random);// 复制random
+            copy = copy.next;
+            node = node.next;
+        }
+        return map.get(head);
+    }
+}
+```
+
+### 旋转链表leetcode 61
+
+给定一个链表，旋转链表，将链表每个节点向右移动 *k* 个位置，其中 *k* 是非负数。
+
+**示例 1:**
+
+```c
+输入: 1->2->3->4->5->NULL, k = 2
+输出: 4->5->1->2->3->NULL
+解释:
+向右旋转 1 步: 5->1->2->3->4->NULL
+向右旋转 2 步: 4->5->1->2->3->NULL
+```
+
+**示例 2:**
+
+```c
+输入: 0->1->2->NULL, k = 4
+输出: 2->0->1->NULL
+解释:
+向右旋转 1 步: 2->0->1->NULL
+向右旋转 2 步: 1->2->0->NULL
+向右旋转 3 步: 0->1->2->NULL
+向右旋转 4 步: 2->0->1->NULL
+```
+
+**解法：**
+
+![](img/23.png)
+
+```java
+class Solution {
+    public ListNode rotateRight(ListNode head, int k) {
+        if (head == null) return null;
+        // 数链表长度，并且将链表首尾相连
+        ListNode node = head;
+        int size = 1;
+        while (node.next != null){
+            node = node.next;
+            size++;
+        }
+        node.next = head;
+        // 计算头指针需要向右移的次数，找到正确的起始位置，切断环
+        int step = size - (k % size);
+        for (int i = 0; i < step; i++) node = node.next;
+        ListNode res = node.next;
+        node.next = null;
+        return res;
+    }
+}
+```
+
+# 二分查找
+
