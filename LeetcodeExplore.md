@@ -7765,3 +7765,431 @@ class Solution {
 
 # 二分查找
 
+## 背景
+
+### 二分查找leetcode 704
+
+给定一个 `n` 个元素有序的（升序）整型数组 `nums` 和一个目标值 `target` ，写一个函数搜索 `nums` 中的 `target`，如果目标值存在返回下标，否则返回 `-1`。
+**示例 1:**
+
+```c
+输入: nums = [-1,0,3,5,9,12], target = 9
+输出: 4
+解释: 9 出现在 nums 中并且下标为 4
+```
+
+**示例 2:**
+
+```c
+输入: nums = [-1,0,3,5,9,12], target = 2
+输出: -1
+解释: 2 不存在 nums 中因此返回 -1
+```
+
+**提示：**
+
+1. 你可以假设 `nums` 中的所有元素是不重复的。
+2. `n` 将在 `[1, 10000]`之间。
+3. `nums` 的每个元素都将在 `[-9999, 9999]`之间。
+
+**解法：**
+
+```java
+class Solution {
+    public int search(int[] nums, int target) {
+        int left = 0;
+        int right = nums.length - 1;
+
+        while (left <= right) {
+            int mid = (right + left) / 2;
+            if (nums[mid] == target) return mid;
+            else if (nums[mid] > target) right = mid - 1;
+            else left = mid + 1;
+        }
+        return -1;
+    }
+}
+```
+
+### 识别和模板简介
+
+**如何识别二分查找？**
+
+如前所述，二分查找是一种在每次比较之后*将查找空间一分为二*的算法。每次需要查找集合中的索引或元素时，都应该考虑二分查找。如果集合是无序的，我们可以总是在应用二分查找之前先对其进行排序。
+
+**成功的二分查找的 3 个部分**
+
+二分查找一般由三个主要部分组成：
+
+1. ***预处理*** —— 如果集合未排序，则进行排序。
+2. ***二分查找*** —— 使用循环或递归在每次比较后将查找空间划分为两半。
+3. ***后处理*** —— 在剩余空间中确定可行的候选者。
+
+## 模板1
+
+### 二分查找模板1
+
+```java
+int binarySearch(int[] nums, int target){
+  if(nums == null || nums.length == 0)
+    return -1;
+
+  int left = 0, right = nums.length - 1;
+  while(left <= right){
+    // Prevent (left + right) overflow
+    int mid = left + (right - left) / 2;
+    if(nums[mid] == target){ return mid; }
+    else if(nums[mid] < target) { left = mid + 1; }
+    else { right = mid - 1; }
+  }
+
+  // End Condition: left > right
+  return -1;
+}
+```
+
+模板 #1 是二分查找的最基础和最基本的形式。这是一个标准的二分查找模板，用于查找可以通过**访问数组中的单个索引**来确定的元素或条件。
+
+**关键属性：**
+
+- 二分查找的最基础和最基本的形式。
+- 查找条件可以在不与元素的两侧进行比较的情况下确定（或使用它周围的特定元素）。
+- 不需要后处理，因为每一步中，你都在检查是否找到了元素。如果到达末尾，则知道未找到该元素。
+
+ **区分语法：**
+
+- 初始条件：`left = 0, right = length-1`
+- 终止：`left > right`
+- 向左查找：`right = mid-1`
+- 向右查找：`left = mid+1`
+
+### x 的平方根leetcode 69
+
+实现 `int sqrt(int x)` 函数。
+
+计算并返回 *x* 的平方根，其中 *x* 是非负整数。
+
+由于返回类型是整数，结果只保留整数的部分，小数部分将被舍去。
+
+**示例 1:**
+
+```c
+输入: 4
+输出: 2
+```
+
+**示例 2:**
+
+```c
+输入: 8
+输出: 2
+说明: 8 的平方根是 2.82842..., 
+     由于返回类型是整数，小数部分将被舍去。
+```
+
+**解法：**
+
+right 最终会小于 left。所以当输入是 8 时，right 最终是 2， left 最终是 3，所以返回 right。
+
+```java
+class Solution {
+    public int mySqrt(int x) {
+        if (x < 2) return x;
+        int left = 0;
+        int right = x / 2;
+        while (left <= right){
+            int mid = (left + right) / 2;
+            long num = (long) mid * mid;
+            if (num == x) return mid;
+            else if (num < x) left = mid + 1;
+            else right = mid - 1;
+        }
+        return right;   // right最终会小于left
+    }
+}
+```
+
+### 猜数字大小leetcode 374
+
+我们正在玩一个猜数字游戏。 游戏规则如下：
+我从 **1** 到 ***n*** 选择一个数字。 你需要猜我选择了哪个数字。
+每次你猜错了，我会告诉你这个数字是大了还是小了。
+你调用一个预先定义好的接口 `guess(int num)`，它会返回 3 个可能的结果（`-1`，`1` 或 `0`）：
+
+```c
+-1 : 我的数字比较小
+ 1 : 我的数字比较大
+ 0 : 恭喜！你猜对了！
+```
+
+**示例 :**
+
+```c
+输入: n = 10, pick = 6
+输出: 6
+```
+
+**解法：**
+
+第6行的写法很细节，可以防止溢出。
+
+```java
+public class Solution extends GuessGame {
+    public int guessNumber(int n) {
+        int left = 1;
+        int right = n;
+        while (left <= right){
+            int mid = left + (right - left) / 2;
+            int comp = super.guess(mid);
+            if (comp == 0) return mid;
+            else if (comp == 1) left = mid + 1;
+            else right = mid - 1;
+        }
+        return -1;
+    }
+}
+```
+
+### 搜索旋转排序数组leetcode 33
+
+假设按照升序排序的数组在预先未知的某个点上进行了旋转。
+
+( 例如，数组 `[0,1,2,4,5,6,7]` 可能变为 `[4,5,6,7,0,1,2]` )。
+
+搜索一个给定的目标值，如果数组中存在这个目标值，则返回它的索引，否则返回 `-1` 。
+
+你可以假设数组中不存在重复的元素。
+
+你的算法时间复杂度必须是 *O*(log *n*) 级别。
+
+**示例 1:**
+
+```c
+输入: nums = [4,5,6,7,0,1,2], target = 0
+输出: 4
+```
+
+**示例 2:**
+
+```c
+输入: nums = [4,5,6,7,0,1,2], target = 3
+输出: -1
+```
+
+**解法：**
+
+先找到旋转点，如示例中的旋转点下标为4，然后把数组看成两部分，一部分是旋转点以左，一部分是旋转点以右，如示例1可分为 [4, 5, 6, 7] 和 [0, 1, 2]，如果target > =数组的第一个元素(4)，则在左半边二分查找，否则在右半边二分查找。
+
+```java
+class Solution {
+    // 找到数组中的最小值，即旋转的点，没有旋转则返回数组长度
+    private int findRotateIndex(int[] nums){
+        int left = 0, right = nums.length - 1;
+        if (nums[left] <= nums[right]) return nums.length;
+        int minIdx = 0;
+        while (left <= right){// 二分，旋转点的特征是小于前一个元素
+            int mid = left + (right - left) / 2;
+            if (nums[mid] > nums[mid + 1]) return mid + 1;
+            else if (nums[mid] < nums[left]) right = mid - 1;
+            else left = mid + 1;
+        }
+        return 0;
+    }
+
+    public int search(int[] nums, int target) {
+        if (nums.length == 0) return -1;
+        int rotate = findRotateIndex(nums);
+        int left, right;
+        if (target < nums[0]){  // target在旋转点的右侧
+            left = rotate;
+            right = nums.length - 1;
+        } else {                // target在旋转点的左侧
+            left = 0;
+            right = rotate - 1;
+        }
+        while (left <= right){  // 二分模板1
+            int mid = left + (right - left) / 2;
+            if (nums[mid] == target) return mid;
+            else if (nums[mid] > target) right = mid - 1;
+            else left = mid + 1;
+        }
+        return -1;
+    }
+}
+```
+
+## 模板2
+
+### 二分查找模板2
+
+```java
+int binarySearch(int[] nums, int target){
+  if(nums == null || nums.length == 0)
+    return -1;
+
+  int left = 0, right = nums.length;
+  while(left < right){
+    // Prevent (left + right) overflow
+    int mid = left + (right - left) / 2;
+    if(nums[mid] == target){ return mid; }
+    else if(nums[mid] < target) { left = mid + 1; }
+    else { right = mid; }	// 不再是mid - 1
+  }
+
+  // Post-processing后处理:
+  // End Condition: left == right
+  if(left != nums.length && nums[left] == target) return left;
+  return -1;
+}
+```
+
+模板 #2 是二分查找的高级模板。它用于查找需要**访问数组中当前索引及其直接右邻居索引**的元素或条件。
+
+**关键属性：**
+
+- 查找条件需要访问元素的**直接右邻居**。
+- 使用元素的右邻居来确定是否满足条件，并决定是向左还是向右。
+- 保证查找空间在每一步中至少有 2 个元素。
+- 需要进行后处理。 当你剩下 1 个元素时，循环 / 递归结束。 需要评估剩余元素是否符合条件。
+
+### 第一个错误的版本leetcode 278
+
+你是产品经理，目前正在带领一个团队开发新的产品。不幸的是，你的产品的最新版本没有通过质量检测。由于每个版本都是基于之前的版本开发的，所以错误的版本之后的所有版本都是错的。
+
+假设你有 `n` 个版本 `[1, 2, ..., n]`，你想找出导致之后所有版本出错的第一个错误的版本。
+
+你可以通过调用 `bool isBadVersion(version)` 接口来判断版本号 `version` 是否在单元测试中出错。实现一个函数来查找第一个错误的版本。你应该尽量减少对调用 API 的次数。
+
+**示例:**
+
+```c
+给定 n = 5，并且 version = 4 是第一个错误的版本。
+
+调用 isBadVersion(3) -> false
+调用 isBadVersion(5) -> true
+调用 isBadVersion(4) -> true
+
+所以，4 是第一个错误的版本。 
+```
+
+**解法：**
+
+套用刚才的模板2。
+
+```java
+public class Solution extends VersionControl {
+    public int firstBadVersion(int n) {
+        int left = 1;
+        int right = n;
+        
+        while(left < right){
+            int mid = left + (right - left) / 2;
+            if (super.isBadVersion(mid) == true) 
+                right = mid;// 不能是mid - 1,会提前结束循环导致出错
+            else left = mid + 1;
+        }
+        
+        if(left <= n && super.isBadVersion(left)) return left;
+        return -1;
+    }
+}
+```
+
+### 寻找峰值leetcode 162
+
+峰值元素是指其值大于左右相邻值的元素。
+
+给定一个输入数组 `nums`，其中 `nums[i] ≠ nums[i+1]`，找到峰值元素并返回其索引。
+
+数组可能包含多个峰值，在这种情况下，返回任何一个峰值所在位置即可。
+
+你可以假设 `nums[-1] = nums[n] = -∞`。
+
+**示例 1:**
+
+```c
+输入: nums = [1,2,3,1]
+输出: 2
+解释: 3 是峰值元素，你的函数应该返回其索引 2。
+```
+
+**示例 2:**
+
+```c
+输入: nums = [1,2,1,3,5,6,4]
+输出: 1 或 5 
+解释: 你的函数可以返回索引 1，其峰值元素为 2；
+     或者返回索引 5， 其峰值元素为 6。
+```
+
+**说明:**
+
+你的解法应该是 *O*(*logN*) 时间复杂度的。
+
+**解法：**
+
+使用二分，如果当前节点大于右侧点，区间向左缩小；反之向右缩小。最终得到峰值点
+
+```java
+class Solution {
+    public int findPeakElement(int[] nums) {
+        int left = 0;
+        int right = nums.length - 1;
+        
+        while (left < right) {
+            int mid = left + (right - left) / 2;
+            if (nums[mid] < nums[mid + 1]) left = mid + 1;
+            else right = mid;
+        }
+        
+        return left;
+    }
+}
+```
+
+### 寻找旋转排序数组中的最小值leetcode 153
+
+假设按照升序排序的数组在预先未知的某个点上进行了旋转。
+
+( 例如，数组 `[0,1,2,4,5,6,7]` 可能变为 `[4,5,6,7,0,1,2]` )。
+
+请找出其中最小的元素。
+
+你可以假设数组中不存在重复元素。
+
+**示例 1:**
+
+```c
+输入: [3,4,5,1,2]
+输出: 1
+```
+
+**示例 2:**
+
+```c
+输入: [4,5,6,7,0,1,2]
+输出: 0
+```
+
+**解法：**
+
+是leetcode 33的一部分。
+
+```java
+class Solution {
+    public int findMin(int[] nums) {
+        int left = 0, right = nums.length - 1;
+        if (nums[left] <= nums[right]) return nums[0];
+        while (left <= right){
+            int mid = left + (right - left) / 2;
+            if (nums[mid] > nums[mid + 1]) return nums[mid + 1];
+            else if (nums[mid] < nums[left]) right = mid - 1;
+            else left = mid + 1;
+        }
+        return 0;
+    }
+}
+```
+
+## 模板3
+
