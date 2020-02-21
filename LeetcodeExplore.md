@@ -8180,10 +8180,10 @@ class Solution {
     public int findMin(int[] nums) {
         int left = 0, right = nums.length - 1;
         if (nums[left] <= nums[right]) return nums[0];
-        while (left <= right){
+        while (left < right){
             int mid = left + (right - left) / 2;
             if (nums[mid] > nums[mid + 1]) return nums[mid + 1];
-            else if (nums[mid] < nums[left]) right = mid - 1;
+            else if (nums[mid] < nums[left]) right = mid;
             else left = mid + 1;
         }
         return 0;
@@ -8192,4 +8192,308 @@ class Solution {
 ```
 
 ## 模板3
+
+### 二分查找模板3
+
+```java
+int binarySearch(int[] nums, int target) {
+    if (nums == null || nums.length == 0)
+        return -1;
+
+    int left = 0, right = nums.length - 1;
+    while (left + 1 < right){
+        // Prevent (left + right) overflow
+        int mid = left + (right - left) / 2;
+        if (nums[mid] == target) {
+            return mid;
+        } else if (nums[mid] < target) {
+            left = mid;
+        } else {
+            right = mid;
+        }
+    }
+
+    // Post-processing:
+    // End Condition: left + 1 == right
+    if(nums[left] == target) return left;
+    if(nums[right] == target) return right;
+    return -1;
+}
+```
+
+模板 #3 是二分查找的另一种独特形式。 它用于搜索需要**访问当前索引及其在数组中的直接左右邻居索引**的元素或条件。
+
+**关键属性：**
+
+- 搜索条件需要访问元素的**直接左右邻居**。
+- 使用元素的邻居来确定它是向右还是向左。
+- 保证查找空间在每个步骤中至少有 3 个元素。
+- 需要进行后处理。 当剩下 2 个元素时，循环 / 递归结束。 需要评估其余元素是否符合条件。
+
+ **区分语法：**
+
+- 初始条件：`left = 0, right = length-1`
+- 终止：`left + 1 == right`
+- 向左查找：`right = mid`
+- 向右查找：`left = mid`
+
+### 在排序数组中查找元素的第一个和最后一个位置leetcode 34
+
+给定一个按照升序排列的整数数组 `nums`，和一个目标值 `target`。找出给定目标值在数组中的开始位置和结束位置。
+
+你的算法时间复杂度必须是 *O*(log *n*) 级别。
+
+如果数组中不存在目标值，返回 `[-1, -1]`。
+
+**示例 1:**
+
+```c
+输入: nums = [5,7,7,8,8,10], target = 8
+输出: [3,4]
+```
+
+**示例 2:**
+
+```c
+输入: nums = [5,7,7,8,8,10], target = 6
+输出: [-1,-1]
+```
+
+**解法：**
+
+使用两个二分，一个查找最左边的目标值，一个查找最右边的目标值，区别在于一个遇到目标值后向左缩小，另一个向右缩小。还有一个值的注意的细节是：**起始左或者右边界可以多一格**，因为 奇数 + 偶数 = 奇数，奇数 / 2 会截断，所以不用担心越界的问题，而多出的这一格可以避免nums只有两个元素时输出错误。
+
+```java
+class Solution {
+    private int findLeft(int[] nums, int target) {
+        int left = -1;	// 多一格
+        int right = nums.length - 1;
+
+        while (left + 1 < right) {
+            int mid = left + (right - left) / 2;
+            if (nums[mid] < target) left = mid;
+            else right = mid;
+        }
+        return (nums[right] == target) ? right : -1;
+    }
+
+    private int findRight(int[] nums, int target) {
+        int left = 0;
+        int right = nums.length;	// 多一格
+
+        while (left + 1 < right) {
+            int mid = left + (right - left) / 2;
+            if (nums[mid] <= target) left = mid;
+            else right = mid;
+        }
+        return (nums[left] == target) ? left : -1;
+    }
+
+    public int[] searchRange(int[] nums, int target) {
+        int[] res = {-1, -1};
+        if (nums.length == 0) return res;
+        res[0] = findLeft(nums, target);
+        res[1] = findRight(nums, target);
+        return res;
+    }
+}
+```
+
+ 如果使用类似于模板2的方法，会变成这样：区别在于循环的条件(line 6)和left的处理(line 10)
+
+```java
+class Solution {
+    private int findRange(int[] nums, int target, boolean goleft) {
+        int left = 0;
+        int right = nums.length;
+
+        while (left < right) {
+            int mid = left + (right - left) / 2;
+            if (nums[mid] > target || (goleft && nums[mid] == target)) 
+                right = mid;        // 向左搜索
+            else left = mid + 1;   // 向右搜索
+        }
+        return left;
+    }
+
+    public int[] searchRange(int[] nums, int target) {
+        int[] res = {-1, -1};
+        int leftRange = findRange(nums, target, true);  // 左边界
+        if (leftRange >= nums.length || nums[leftRange] != target) 
+            return res;
+        res[0] = leftRange;
+        res[1] = findRange(nums, target, false) - 1;    // 右边界
+        return res;
+    }
+}
+```
+
+### 找到 K 个最接近的元素leetcode 658
+
+给定一个排序好的数组，两个整数 `k` 和 `x`，从数组中找到最靠近 `x`（两数之差最小）的 `k` 个数。返回的结果必须要是按升序排好的。如果有两个数与 `x` 的差值一样，优先选择数值较小的那个数。
+
+**示例 1:**
+
+```c
+输入: [1,2,3,4,5], k=4, x=3
+输出: [1,2,3,4]
+```
+
+**示例 2:**
+
+```c
+输入: [1,2,3,4,5], k=4, x=-1
+输出: [1,2,3,4]
+```
+
+**说明:**
+
+1. k 的值为正数，且总是小于给定排序数组的长度。
+2. 数组不为空，且长度不超过 104
+3. 数组里的每个元素与 x 的绝对值不超过 104
+
+**更新(2017/9/19):**
+这个参数 *arr* 已经被改变为一个**整数数组**（而不是整数列表）。 **请重新加载代码定义以获取最新更改。**
+
+**解法：**
+
+分为3步：
+
+1. 找出x的下标。由于模板3的特点，如果数组中有x，则right正好为x的下标，否则arr[left] < x，arr[right] > x。
+2. 找出长度为k的子数组，分为三种情况：
+   1. k == 0，返回空数组
+   2. k == 1，返回arr[left]和arr[right]中更接近x的一个值
+   3. k >= 2，子数组向左右扩展，直到子数组的长度为k
+3. 平移结果子数组。因为题目要求和x的差相等的情况下，优先输出小的，所以当**左边界左边的数**比**右边界**更接近x，则向左平移。但如果**右边界右边的数**比**左边界**更接近x，则向右移，最终得到答案。
+
+```java
+class Solution {
+    public List<Integer> findClosestElements(int[] arr, int k, int x) {
+        List<Integer> list = new ArrayList<>();
+        // 找到x的下标
+        int left = -1;
+        int right = arr.length;
+        while (left + 1 < right) {
+            int mid = left + (right - left) / 2;
+            if (arr[mid] < x) left = mid;
+            else right = mid;
+        }   // 至此，right是arr中大于等于x的最左下标,left = right - 1
+        // 获取长度为k的结果区间
+        int startIdx = Math.max(left, 0);
+        int endIdx = right;
+        if (k == 0) return list;
+        else if (k == 1) {
+            if (x - arr[startIdx] > arr[endIdx] - x) {
+                list.add(arr[endIdx]);
+            } else list.add(arr[startIdx]);
+            return list;
+        }
+        while (endIdx - startIdx + 1 < k) {
+            if (startIdx == 0) {
+                endIdx++;
+            } else if (endIdx == arr.length - 1) {
+                startIdx--;
+            } else if (x - arr[startIdx] <= arr[endIdx] - x) {
+                startIdx--;
+            } else {
+                endIdx++;
+            }
+        }
+        // 调整结果区间
+        while (startIdx != 0 && x - arr[startIdx - 1] <= arr[endIdx] - x) {
+            startIdx--; endIdx--;
+        }
+        while (endIdx < arr.length - 1 && x - arr[startIdx] > arr[endIdx + 1] - x){
+            startIdx++; endIdx++;
+        }
+        for (int i = 0; i < k; i++) list.add(arr[startIdx++]);
+        return list;
+    }
+}
+```
+
+官方题解的方法更简单，先找出x的下标，再确定2倍于k的范围，最后把范围缩小到k。代码更加简洁，但不如我的方法快。
+
+```java
+class Solution {
+    public List<Integer> findClosestElements(int[] arr, int k, int x) {
+        // 把arr复制到list中
+        List<Integer> list = Arrays.stream(arr).boxed().collect(Collectors.toList());
+        int size = list.size();
+        if (x < list.get(0)) {  // 如果x比最左边小
+            return list.subList(0, k);  // 返回前k个
+        }else if (x > list.get(size - 1)){  // 比最右边大
+            return list.subList(size - k, size);// 返回后k个
+        }else { // 否则二分
+            // 如果搜索键包含在列表中，则返回搜索键的索引
+            // 否则返回 (-(插入点) - 1)。
+            // 插入点被定义为将键插入列表的那一点：
+            // 即第一个大于此键的元素索引；
+            // 如果列表中的所有元素都小于指定的键，则为 list.size()。
+            // 注意，这保证了当且仅当此键被找到时，返回的值将 >= 0。
+            int index = Collections.binarySearch(list, x);
+            if (index < 0) index = -index - 1;  // 首个大于x的下标
+            int low = Math.max(0, index - k - 1);   // 2k的区间
+            int high = Math.min(size - 1, index + k - 1);
+            while (high - low + 1 > k){ // 缩小到k
+                if (x - list.get(low) <= list.get(high) - x) high--;
+                else low++;
+            }
+            return list.subList(low, high + 1);
+        }
+    }
+}
+```
+
+### 寻找峰值leetcode 162
+
+峰值元素是指其值大于左右相邻值的元素。
+
+给定一个输入数组 `nums`，其中 `nums[i] ≠ nums[i+1]`，找到峰值元素并返回其索引。
+
+数组可能包含多个峰值，在这种情况下，返回任何一个峰值所在位置即可。
+
+你可以假设 `nums[-1] = nums[n] = -∞`。
+
+**示例 1:**
+
+```
+输入: nums = [1,2,3,1]
+输出: 2
+解释: 3 是峰值元素，你的函数应该返回其索引 2。
+```
+
+**示例 2:**
+
+```
+输入: nums = [1,2,1,3,5,6,4]
+输出: 1 或 5 
+解释: 你的函数可以返回索引 1，其峰值元素为 2；
+     或者返回索引 5， 其峰值元素为 6。
+```
+
+**说明:**
+
+你的解法应该是 *O*(*logN*) 时间复杂度的。
+
+**解法：**
+
+使用二分，如果当前节点大于右侧点，区间向左缩小；反之向右缩小。最终得到峰值点，不同于之前的是，这次我们使用了模板3
+
+```java
+class Solution {
+    public int findPeakElement(int[] nums) {
+        int left = 0;
+        int right = nums.length - 1;
+
+        while (left + 1 < right){
+            int mid = left + (right - left) / 2;
+            if (nums[mid] < nums[mid + 1]) left = mid;
+            else right = mid;
+        }
+        if (right == nums.length) return left;
+        return (nums[left] > nums[right]) ? left : right;
+    }
+}
+```
 
