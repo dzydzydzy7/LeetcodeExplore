@@ -8668,3 +8668,231 @@ class Solution {
 
 ## 小结
 
+### Pow(x, n)
+
+实现 [pow(*x*, *n*)](https://www.cplusplus.com/reference/valarray/pow/) ，即计算 x 的 n 次幂函数。
+
+**示例 1:**
+
+```
+输入: 2.00000, 10
+输出: 1024.00000
+```
+
+**示例 2:**
+
+```
+输入: 2.10000, 3
+输出: 9.26100
+```
+
+**示例 3:**
+
+```
+输入: 2.00000, -2
+输出: 0.25000
+解释: 2-2 = 1/22 = 1/4 = 0.25
+```
+
+**说明:**
+
+- -100.0 < *x* < 100.0
+- *n* 是 32 位有符号整数，其数值范围是 [−231, 231 − 1] 。
+
+**解法：**
+
+这种计算乘方的方法也是一种二分，使用次方乘次方的方法在logn时间内到达n次方，而非乘n次x。
+
+```java
+class Solution {
+    public double myPow(double x, int n) {
+        long N = n; // 细节：2^-31在int的表示范围而2^31不在
+        if (n < 0) {
+            x = 1 / x;
+            // 细节：一定是-N而不是-n
+            // -((int)-2147483648) = -2147483648
+            N = -N;
+        }
+        return pow(x, N);
+    }
+    
+    // 从爬楼梯第五种解法学来的pow
+    private double pow(double x, long n) {
+        double res = 1.0;
+        while (n > 0) {
+            if ((n & 1) == 1) res = res * x;
+            n >>= 1;
+            x = x * x;
+        }
+        return res;
+    }
+}
+```
+
+### 有效的完全平方数leetcode 367
+
+给定一个正整数 *num*，编写一个函数，如果 *num* 是一个完全平方数，则返回 True，否则返回 False。
+
+**说明：**不要使用任何内置的库函数，如 `sqrt`。
+
+**示例 1：**
+
+```
+输入：16
+输出：True
+```
+
+**示例 2：**
+
+```
+输入：14
+输出：False
+```
+
+**解法：**
+
+使用二分的模板1。
+
+```java
+class Solution {
+    public boolean isPerfectSquare(int num) {
+        int left = 0;
+        int right = (num > 2) ? num / 2 : num;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            long squre = (long) mid * mid;
+            if (squre == num) return true;
+            else if (squre < num) left = mid + 1;
+            else right = mid - 1;
+        }
+        return false;
+    }
+}
+```
+
+### 寻找比目标字母大的最小字母leetcode 744
+
+给定一个只包含小写字母的有序数组`letters` 和一个目标字母 `target`，寻找有序数组里面比目标字母大的最小字母。
+
+数组里字母的顺序是循环的。举个例子，如果目标字母`target = 'z'` 并且有序数组为 `letters = ['a', 'b']`，则答案返回 `'a'`。
+
+**示例:**
+
+```c
+输入:
+letters = ["c", "f", "j"]
+target = "a"
+输出: "c"
+
+输入:
+letters = ["c", "f", "j"]
+target = "c"
+输出: "f"
+
+输入:
+letters = ["c", "f", "j"]
+target = "d"
+输出: "f"
+
+输入:
+letters = ["c", "f", "j"]
+target = "g"
+输出: "j"
+
+输入:
+letters = ["c", "f", "j"]
+target = "j"
+输出: "c"
+
+输入:
+letters = ["c", "f", "j"]
+target = "k"
+输出: "c"
+```
+
+**注:**
+
+1. `letters`长度范围在`[2, 10000]`区间内。
+2. `letters` 仅由小写字母组成，最少包含两个不同的字母。
+3. 目标字母`target` 是一个小写字母。
+
+**解法：**
+
+使用模板2，找到letters中最后一个等于target的右邻居。
+
+```java
+class Solution {
+    public char nextGreatestLetter(char[] letters, char target) {
+        int left = 0;
+        int right = letters.length;
+        while (left < right) {
+            int mid = left + (right - left) / 2;
+            if (letters[mid] <= target) left = mid + 1;
+            else right = mid;
+        }
+        return letters[left % letters.length];
+    }
+}
+```
+
+## 更多练习
+
+### 寻找旋转排序数组中的最小值II leetcode 154
+
+假设按照升序排序的数组在预先未知的某个点上进行了旋转。
+
+( 例如，数组 `[0,1,2,4,5,6,7]` 可能变为 `[4,5,6,7,0,1,2]` )。
+
+请找出其中最小的元素。
+
+注意数组中可能存在重复的元素。
+
+**示例 1：**
+
+```
+输入: [1,3,5]
+输出: 1
+```
+
+**示例 2：**
+
+```
+输入: [2,2,2,0,1]
+输出: 0
+```
+
+**说明：**
+
+- 这道题是 [寻找旋转排序数组中的最小值](https://leetcode-cn.com/problems/find-minimum-in-rotated-sorted-array/description/) 的延伸题目。
+- 允许重复会影响算法的时间复杂度吗？会如何影响，为什么？
+
+**解法：**
+
+旋转数组可以分为两个数组，前一个数组的最小元素大于等于后一个数组的最大元素，如[4,5,6,7,0,1,2]可以分为[4，5，6，7]和[0，1，2]。我们要做的就是找分界点(第二个数组的第一个元素)。
+
+我们设置left，right指向大数组两端，mid是每次二分的中点，和right比较比较会有三种情况
+
+1. mid > right，说明mid在第一个数组中，left = mid + 1
+2. mid < right，说明mid在第二个数组中，right = mid
+3. mid = right，不能确定mid在哪个数组，可能是[1,0,1,1,1]，也可能是[1,1,1,0,1]。所以使righ = right - 1，因为mid = right，去掉right后right的值还在数组中，又改变了下一次二分的mid和right。这是相比于153题的难点。
+
+以上的left，right，mid指的都是nums[left]、nums[right]、nums[mid]。
+
+以上方法是以right为基准比较的，当不断经历情况3使right为最小值时，会转到情况1，向右缩小，找到；而如果以left为基准，不断经历情况3，left是最小值时，会转到情况1，向右缩小，但left在左边。可以以[1,0,1,1,1]为例考虑。
+
+```java
+class Solution {
+    public int findMin(int[] nums) {
+        int left = 0, right = nums.length - 1;
+        if (nums[left] < nums[right]) return nums[0];
+        while (left < right){
+            int mid = left + (right - left) / 2;
+            if (nums[mid] > nums[right]) left = mid + 1;
+            else if (nums[mid] < nums[right]) right = mid;
+            else right = right - 1;
+        }
+        return nums[left];
+    }
+}
+```
+
