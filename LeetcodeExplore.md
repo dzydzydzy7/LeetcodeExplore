@@ -8896,3 +8896,446 @@ class Solution {
 }
 ```
 
+
+
+此外，使用hashSet或hashMap的题目，也可以将哈希表中的查找换成二分查找。
+
+比如 两个数组的交集leetcode 349、两个数组的交集II leetcode 350、两数之和II leetcode 167
+
+## 更多练习II
+
+### 寻找重复数leetcode 287
+
+给定一个包含 *n* + 1 个整数的数组 *nums*，其数字都在 1 到 *n* 之间（包括 1 和 *n*），可知至少存在一个重复的整数。假设只有一个重复的整数，找出这个重复的数。
+
+**示例 1:**
+
+```c
+输入: [1,3,4,2,2]
+输出: 2
+```
+
+**示例 2:**
+
+```c
+输入: [3,1,3,4,2]
+输出: 3
+```
+
+**说明：**
+
+1. **不能**更改原数组（假设数组是只读的）。
+2. 只能使用额外的 *O*(1) 的空间。
+3. 时间复杂度小于 $O(n^2)$ 。
+4. 数组中只有一个重复的数字，但它可能不止重复出现一次。
+
+**解法：**
+
+数组没有序，也不能更改原数组，所以不能二分。
+
+只能使用O(1)的额外空间，所以不能hashSet。
+
+暴力勉强符合要求但效率过低。
+
+```java
+class Solution {
+    public int findDuplicate(int[] nums) {
+        for (int i = 0; i < nums.length; i++) {
+            // i右边 且和 nums[i]相等的数字 的下标
+            int idx = searchRight(nums, i + 1, nums[i]);
+            if (idx >= 0) {
+                return nums[i];
+            }
+        }
+        return -1;
+    }
+    
+    // 找这个数字右边有没有和它相等的数字
+    private int searchRight(int[] nums, int start, int target) {
+        while (start < nums.length) {
+            if (nums[start] == target) return start;
+            start++;
+        }
+        return -1;
+    }
+}
+```
+
+题目中有一个关键的信息：其数字都在 1 到 *n* 之间（包括 1 和 *n*），而数组也一共只有n + 1个元素，因为 nums 中的每个数字都在 1 和 n 之间，所以它必须指向存在的索引。此外，由于 0 不能作为 nums 中的值出现，nums[0] 不能作为循环的一部分。这样就可以使用弗洛伊德判圈法。
+
+![](img/19.png)
+
+```java
+class Solution {
+    public int findDuplicate(int[] nums) {
+        // 找到快慢指针相遇的点
+        int fast = nums[0];
+        int slow = nums[0];
+        do {
+            fast = nums[nums[fast]];
+            slow = nums[slow];
+        } while (fast != slow);
+        // 找环的入口(尾部连接的点)
+        int start = nums[0];    // 头结点
+        int find = slow;    // 相遇的点
+        while (start != find){
+            start = nums[start];
+            find = nums[find];
+        }
+        return start;
+    }
+}
+```
+
+### 寻找两个有序数组的中位数leetcode 4
+
+给定两个大小为 m 和 n 的有序数组 `nums1` 和 `nums2`。
+
+请你找出这两个有序数组的中位数，并且要求算法的时间复杂度为 O(log(m + n))。
+
+你可以假设 `nums1` 和 `nums2` 不会同时为空。
+
+**示例 1:**
+
+```c
+nums1 = [1, 3]
+nums2 = [2]
+
+则中位数是 2.0
+```
+
+**示例 2:**
+
+```c++
+nums1 = [1, 2]
+nums2 = [3, 4]
+
+则中位数是 (2 + 3)/2 =2.5
+```
+
+**解法：**
+
+首先把问题转化为求第K大的数字，k 为中间的下标，如果两个数组的长度和为偶数， 则 k 就是最中间的两个下标
+
+由于数组有序，我们可以跳着找，即：
+
+假设我们要找第 7 个数字：
+
+<img src="img/25.png"  />
+
+我们直接将两个数组的第3个数字比较，显然第二个数组的第三个数字更小，所以第二个数组的前三个数字都被舍弃，k - 3。然后我们继续这样的比较，直到 k == 1 就可以找到第 k 大的数字。
+
+小技巧：本题需要分的情况较多，所以我们保持 数组1 比 数组2 短，来简化 if 判断。
+
+```java
+class Solution {
+    public double findMedianSortedArrays(int[] nums1, int[] nums2) {
+        int len1 = nums1.length;
+        int len2 = nums2.length;
+        // 如果总长度为偶数，left，right是中间的两个下标
+        // 如果为奇数，left，right指向同一下标
+        int left = (len1 + len2 + 1) / 2;
+        int right = (len1 + len2 + 2) / 2;
+        // 分奇偶解决，也可以部分奇偶直接用偶数的情况
+        if ((len1 + len2) % 2 == 1)
+            return findKth(nums1, 0, len1, nums2, 0, len2, left);
+        else
+            return (findKth(nums1, 0, len1, nums2, 0, len2, left)
+                    + findKth(nums1, 0, len1, nums2, 0, len2, right)) / 2;
+    }
+
+    // 找到第k大的值，s表示起始下标，e表示结束下标
+    private double findKth(int[] nums1, int s1, int e1, int[] nums2, int s2, int e2, int k) {
+        // 当前两个数组的剩余长度
+        int len1 = e1 - s1;
+        int len2 = e2 - s2;
+        // 我们保持第一个数组比第二个数组短
+        if (len1 > len2) return findKth(nums2, s2, e2, nums1, s1, e1, k);
+        // 递归结束条件，一个数组为空或 k == 1
+        if (len1 == 0) return nums2[s2 + k - 1];
+        if (k == 1) return Math.min(nums1[s1], nums2[s2]);
+        // 尾递归，缩小数组，缩小k
+        int i = s1 + Math.min(len1, k / 2) - 1;
+        int j = s2 + Math.min(len2, k / 2) - 1;
+        if (nums1[i] < nums2[j])
+            return findKth(nums1, i + 1, e1, nums2, s2, e2, k - (i - s1 + 1));
+        else
+            return findKth(nums1, s1, e1, nums2, j + 1, e2, k - (j - s2 + 1));
+    }
+}
+```
+
+# N叉树
+
+## 遍历
+
+### N-ary Tree Preorder Traversal leetcode 589
+
+给定一个 N 叉树，返回其节点值的*前序遍历*。
+
+例如，给定一个 `3叉树` :
+
+ 
+
+<img src="img/26.png" style="zoom:50%;" />
+
+ 
+
+返回其前序遍历: `[1,3,5,6,2,4]`。
+
+**说明:** 递归法很简单，你可以使用迭代法完成此题吗?
+
+**解法：**
+
+递归法：
+
+```java
+class Solution {
+    List<Integer> res = new ArrayList<>();
+    public List<Integer> preorder(Node root) {
+        if (root == null) return res;
+        dfs(root);
+        return res;
+    }
+
+    private void dfs(Node node) {
+        res.add(node.val);
+        for (Node n : node.children) dfs(n);
+    }
+}
+```
+
+使用双端队列实现的迭代：
+
+```java
+class Solution {
+    List<Integer> res = new ArrayList<>();
+
+    public List<Integer> preorder(Node root) {
+        if (root == null) return res;
+        LinkedList<Node> dequeue = new LinkedList<>();
+        dequeue.add(root);
+        while (!dequeue.isEmpty()) {
+            Node node = dequeue.pollFirst();
+            res.add(node.val);
+            for (int i = 0; i < node.children.size(); i++)
+                dequeue.add(i, node.children.get(i));
+        }
+        return res;
+    }
+}
+```
+
+### N-ary Tree Postorder Traversal leetcode 590
+
+给定一个 N 叉树，返回其节点值的*后序遍历*。
+
+例如，给定一个 `3叉树` :
+
+ <img src="img/26.png" style="zoom:50%;" />
+
+返回其后序遍历: `[5,6,3,2,4,1]`.
+
+**说明:** 递归法很简单，你可以使用迭代法完成此题吗?
+
+**解法：**
+
+递归法：
+
+```java
+class Solution {
+    List<Integer> res = new LinkedList<>();
+
+    public List<Integer> postorder(Node root) {
+        if (root == null) return res;
+        recursion(root);
+        return res;
+    }
+
+    private void recursion(Node node){
+        for (Node n : node.children){
+            recursion(n);
+        }
+        res.add(node.val);
+    }
+}
+```
+
+迭代法：
+
+```java
+class Solution {
+    LinkedList<Integer> res = new LinkedList<>();
+
+    public List<Integer> postorder(Node root) {
+        if (root == null) return res;
+        LinkedList<Node> dequeue =  new LinkedList<>();
+        dequeue.add(root);
+        while (!dequeue.isEmpty()){
+            Node node = dequeue.pollLast();
+            res.addFirst(node.val); // 通过头插来实现反转列表
+            dequeue.addAll(node.children);
+        }
+        return res;
+    }
+}
+```
+
+### N叉树的层序遍历leetcode 429
+
+给定一个 N 叉树，返回其节点值的*层序遍历*。 (即从左到右，逐层遍历)。
+
+例如，给定一个 `3叉树` :
+
+<img src="img/26.png" style="zoom:50%;" />
+
+返回其层序遍历:
+
+```c
+[
+     [1],
+     [3,2,4],
+     [5,6]
+]
+```
+
+**说明:**
+
+1. 树的深度不会超过 `1000`。
+2. 树的节点总数不会超过 `5000`。
+
+**解法：**
+
+使用广度优先的模板：
+
+```java
+class Solution {
+    public List<List<Integer>> levelOrder(Node root) {
+        List<List<Integer>> res = new ArrayList<>();
+        if (root == null) return res;
+        Queue<Node> queue = new LinkedList<>();
+        queue.add(root);
+        while (!queue.isEmpty()){
+            res.add(new ArrayList<>());
+            int size = queue.size();
+            for (int i = 0; i < size; i++){
+                Node node = queue.poll();
+                res.get(res.size() - 1).add(node.val);
+                queue.addAll(node.children);
+            }
+        }
+        return res;
+    }
+}
+```
+
+## 递归
+
+### Maximum Depth of N-ary Tree leetcode 559
+
+给定一个 N 叉树，找到其最大深度。
+
+最大深度是指从根节点到最远叶子节点的最长路径上的节点总数。
+
+例如，给定一个 `3叉树` :
+
+<img src="img/26.png" style="zoom:50%;" />
+
+我们应返回其最大深度，3。
+
+**说明:**
+
+1. 树的深度不会超过 `1000`。
+2. 树的节点总不会超过 `5000`。
+
+**解法：**
+
+```java
+class Solution {
+    public int maxDepth(Node root) {
+        if(root == null) return 0;
+        int maxDepth = 0;
+        for (Node n : root.children){
+            int deepth = maxDepth(n);
+            if (deepth > maxDepth) maxDepth = deepth;
+        }
+        return maxDepth + 1;
+    }
+}
+```
+
+## 序列化和反序列化 N 叉树leetcode 428
+
+序列化是指将一个数据结构转化为位序列的过程，因此可以将其存储在文件中或内存缓冲区中，以便稍后在相同或不同的计算机环境中恢复结构。
+
+设计一个序列化和反序列化 N 叉树的算法。一个 N 叉树是指每个节点都有不超过 N 个孩子节点的有根树。序列化 / 反序列化算法的算法实现没有限制。你只需要保证 N 叉树可以被序列化为一个字符串并且该字符串可以被反序列化成原树结构即可。
+
+例如，你需要序列化下面的 `3-叉` 树。
+
+<img src="img/26.png" style="zoom:50%;" />
+
+为 `[1 [3[5 6] 2 4]]`。你不需要以这种形式完成，你可以自己创造和实现不同的方法。
+
+**注意：**
+
+1. `N` 的范围在 `[1, 1000]`
+2. 不要使用类成员 / 全局变量 / 静态变量来存储状态。你的序列化和反序列化算法应是无状态的。
+
+**解法：**
+
+使用dfs序列化树，这也是序列化树的一般方法
+
+```java
+class Codec {
+    // 序列化为字符串
+    public String serialize(Node root) {
+        StringBuilder sb = new StringBuilder();
+        if (root == null) return sb.toString();
+        encode(root, sb);
+        return sb.toString();
+    }
+
+    // 序列化结果形如：[ 1 [ 3 [ 5 6 ] 2 4 ] ]，使用dfs
+    private void encode(Node node, StringBuilder sb) {
+        if (node == null) return;
+        sb.append(node.val);
+        sb.append(" ");
+        // 有孩子才加中括号，没有不加
+        if (!node.children.isEmpty()) sb.append("[ ");
+        for (Node n : node.children) {
+            encode(n, sb);  // 递归
+        }
+        if (!node.children.isEmpty()) sb.append("] ");
+    }
+
+    // 反序列化为树
+    public Node deserialize(String data) {
+        // isEmpty 就是判断字符串长度是否为0
+        if (data.trim().isEmpty()) return null;
+        String[] strings = data.trim().split(" ");
+        Stack<Node> stack = new Stack<>();
+        Node root = null;   // 根节点
+        Node cur = null;    // 当前节点
+        // 使用栈构建树，栈顶存储当前节点的父结点
+        for (String s : strings) {
+            if (s.equals("["))
+                stack.push(cur);
+            else if (s.equals("]"))
+                cur = stack.pop();
+            else {
+                Node node = new Node(Integer.parseInt(s));
+                node.children = new LinkedList<>();
+                if (root == null){  // 如果没有根节点
+                    root = node;    // 它就是根节点
+                }else { // 否则是他的父结点的子结点
+                    Node parent = stack.peek();
+                    parent.children.add(node);
+                }
+                cur = node;
+            }
+        }
+        return root;
+    }
+}
+```
+
