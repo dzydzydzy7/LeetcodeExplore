@@ -9339,3 +9339,376 @@ class Codec {
 }
 ```
 
+# 二叉搜索树
+
+## 二叉搜索树
+
+### 验证二叉搜索树leetcode 98
+
+给定一个二叉树，判断其是否是一个有效的二叉搜索树。
+
+假设一个二叉搜索树具有如下特征：
+
+- 节点的左子树只包含**小于**当前节点的数。
+- 节点的右子树只包含**大于**当前节点的数。
+- 所有左子树和右子树自身必须也是二叉搜索树。
+
+**示例 1:**
+
+```c
+输入:
+    2
+   / \
+  1   3
+输出: true
+```
+
+**示例 2:**
+
+```c
+输入:
+    5
+   / \
+  1   4
+     / \
+    3   6
+输出: false
+解释: 输入为: [5,1,4,null,null,3,6]。
+     根节点的值为 5 ，但是其右子节点值为 4 。
+```
+
+**解法：**
+
+如果判断每个节点的左右子结点会将示例2误判为正确，所以要使用上下界判断。一个左子结点，他的上界一定是父结点，下界不变；反之右子结点的下界一定是根节点，上界不变。使用递归实现
+
+```java
+class Solution {
+    public boolean isValidBST(TreeNode root) {
+        return recursion(root, null, null);
+    }
+
+    // 递归检测每个节点是否在上下界之间
+    private boolean recursion(TreeNode node, Integer lower, Integer upper) {
+        if (node == null) return true;
+        // 检查当前节点是否超过上下界
+        if (lower != null && node.val <= lower) return false;
+        if (upper != null && node.val >= upper) return false;
+
+        if (!recursion(node.left, lower, node.val)) return false;
+        if (!recursion(node.right, node.val, upper)) return false;
+        return true;
+    }
+}
+```
+
+### 二叉搜索树迭代器leetcode 173
+
+实现一个二叉搜索树迭代器。你将使用二叉搜索树的根节点初始化迭代器。
+
+调用 `next()` 将返回二叉搜索树中的下一个最小的数。
+
+**示例：**
+
+![](img/27.png)
+
+```java
+BSTIterator iterator = new BSTIterator(root);
+iterator.next();    // 返回 3
+iterator.next();    // 返回 7
+iterator.hasNext(); // 返回 true
+iterator.next();    // 返回 9
+iterator.hasNext(); // 返回 true
+iterator.next();    // 返回 15
+iterator.hasNext(); // 返回 true
+iterator.next();    // 返回 20
+iterator.hasNext(); // 返回 false
+```
+
+**提示：**
+
+- `next()` 和 `hasNext()` 操作的时间复杂度是 O(1)，并使用 O(*h*) 内存，其中 *h* 是树的高度。
+- 你可以假设 `next()` 调用总是有效的，也就是说，当调用 `next()` 时，BST 中至少存在一个下一个最小的数。
+
+**解法：**
+
+扁平化BST，中序遍历为list，使用list的迭代器
+
+```java
+class BSTIterator {
+
+    List<Integer> list = new ArrayList<>();
+    Iterator<Integer> iter;
+
+    public BSTIterator(TreeNode root) {
+        inorder(root);
+        iter = list.iterator();
+    }
+
+    private void inorder(TreeNode node) {
+        if (node == null) return;
+        inorder(node.left);
+        list.add(node.val);
+        inorder(node.right);
+     }
+
+    /** @return the next smallest number */
+    public int next() {
+        return iter.next();
+    }
+
+    /** @return whether we have a next smallest number */
+    public boolean hasNext() {
+        return iter.hasNext();
+    }
+}
+```
+
+使用类似与迭代版中序遍历的方法
+
+```java
+class BSTIterator {
+
+    Stack<TreeNode> stack = new Stack<>();
+
+    public BSTIterator(TreeNode root) {
+        travelAlongLeft(root);
+    }
+
+    private void travelAlongLeft(TreeNode node) {
+        while (node != null) {
+            stack.push(node);
+            node = node.left;
+        }
+    }
+
+    public int next() {
+        TreeNode leftNode = stack.pop();    // 最左结点
+        if (leftNode.right != null) // 如果最左结点的右结点不为空
+            travelAlongLeft(leftNode.right);    // 转向右子树的最左结点
+        return leftNode.val;
+    }
+
+    public boolean hasNext() {
+        return stack.size() > 0;
+    }
+}
+```
+
+## 基本操作
+
+### 二叉搜索树中的搜索leetcode 700
+
+给定二叉搜索树（BST）的根节点和一个值。 你需要在BST中找到节点值等于给定值的节点。 返回以该节点为根的子树。 如果节点不存在，则返回 NULL。
+
+例如，
+
+```
+给定二叉搜索树:
+
+        4
+       / \
+      2   7
+     / \
+    1   3
+
+和值: 2
+```
+
+你应该返回如下子树:
+
+```
+      2     
+     / \   
+    1   3
+```
+
+在上述示例中，如果要找的值是 `5`，但因为没有节点值为 `5`，我们应该返回 `NULL`。
+
+**解法：**
+
+```java
+class Solution {
+    public TreeNode searchBST(TreeNode root, int val) {
+        while (root != null) {
+            if (root.val == val) return root;
+            if (root.val > val) root = root.left;
+            else if (root.val < val) root = root.right;
+        }
+        return root;
+    }
+}
+```
+
+### 二叉搜索树的插入操作leetcode 701
+
+给定二叉搜索树（BST）的根节点和要插入树中的值，将值插入二叉搜索树。 返回插入后二叉搜索树的根节点。 保证原始二叉搜索树中不存在新值。
+
+注意，可能存在多种有效的插入方式，只要树在插入后仍保持为二叉搜索树即可。 你可以返回任意有效的结果。
+
+例如, 
+
+```
+给定二叉搜索树:
+
+        4
+       / \
+      2   7
+     / \
+    1   3
+
+和 插入的值: 5
+```
+
+你可以返回这个二叉搜索树:
+
+```
+         4
+       /   \
+      2     7
+     / \   /
+    1   3 5
+```
+
+或者这个树也是有效的:
+
+```
+         5
+       /   \
+      2     7
+     / \   
+    1   3
+         \
+          4
+```
+
+**解法：**
+
+返回第一种结果，找到最接近的末端结点，插入为它的子结点。
+
+```java
+class Solution {
+    public TreeNode insertIntoBST(TreeNode root, int val) {
+        TreeNode node = root;
+        while (node != null){
+            if (node.val > val) {
+                if (node.left != null) node = node.left;
+                else {
+                    node.left = new TreeNode(val);
+                    return root;
+                }
+            }else {
+                if (node.right != null) node = node.right;
+                else {
+                    node.right = new TreeNode(val);
+                    return root;
+                }
+            }
+        }
+        return root;
+    }
+}
+```
+
+### 删除二叉搜索树中的结点leetcode 450
+
+给定一个二叉搜索树的根节点 **root** 和一个值 **key**，删除二叉搜索树中的 **key** 对应的节点，并保证二叉搜索树的性质不变。返回二叉搜索树（有可能被更新）的根节点的引用。
+
+一般来说，删除节点可分为两个步骤：
+
+1. 首先找到需要删除的节点；
+2. 如果找到了，删除它。
+
+**说明：** 要求算法时间复杂度为 O(h)，h 为树的高度。
+
+**示例:**
+
+```c
+root = [5,3,6,2,4,null,7]
+key = 3
+
+    5
+   / \
+  3   6
+ / \   \
+2   4   7
+
+给定需要删除的节点值是 3，所以我们首先找到 3 这个节点，然后删除它。
+
+一个正确的答案是 [5,4,6,2,null,null,7], 如下图所示。
+
+    5
+   / \
+  4   6
+ /     \
+2       7
+
+另一个正确答案是 [5,2,6,null,4,null,7]。
+
+    5
+   / \
+  2   6
+   \   \
+    4   7
+```
+
+**解法：**
+
+分为三种情况：
+
+目标没有子结点：
+
+<img src="img/28.png" style="zoom: 25%;" />
+
+目标只有一个子结点：
+
+<img src="img/29.png" style="zoom: 50%;" />
+
+目标有两个子结点：
+
+![](img/30.png)
+
+我们可以将后两种情况合并为一种情况，如果有右子树，就用上图的方法删除，如果有左子树，就用镜像的方法删除。
+
+由于java引用的问题，我们删除一个节点不能直接 `目标节点 = null`，而应该 `目标结点的父结点.left = null` 或 `目标节点的父结点.right = null`。而记下父结点会使代码混乱，而递归可以隐式的解决这个问题。
+
+```java
+class Solution {
+    // 子树中的前驱，左然后一直右，并非一般意义的前驱
+    private int predecessor(TreeNode root) {
+        root = root.left;   // 这里缺少一个root.left非空的判断
+        while (root.right != null)  // 调用该函数前要判断
+            root = root.right;
+        return root.val;
+    }
+
+    // 子树中的后继，右然后一直左，并非一般意义的后继
+    private int successor(TreeNode root) {
+        root = root.right;  // 这里缺少一个root.right非空的判断
+        while (root.left != null)   // 调用该函数前要判断
+            root = root.left;
+        return root.val;
+    }
+
+    public TreeNode deleteNode(TreeNode root, int key) {
+        if (root == null) return null;
+        // 找到要删除的结点
+        if (key > root.val) root.right = deleteNode(root.right, key);
+        else if (key < root.val) root.left = deleteNode(root.left, key);
+        else {  // 如果当前节点就是要删除的节点
+            // 情况1，是叶结点
+            if (root.left == null && root.right == null)
+                root = null;// 不是在这里删除的，root的空值会返回，赋值给上一层递归
+            // 将情况23合并考虑，如果有右子树，则用后继代替该节点
+            else if (root.right != null) { // 这个语句恰巧补上了
+                root.val = successor(root);// 这个函数中缺少的判断
+                root.right = deleteNode(root.right, root.val);
+            } else {   // 如果有左子树，则用前驱代替该节点
+                root.val = predecessor(root);
+                root.left = deleteNode(root.left, root.val);
+            }
+        }
+        return root;    // 返回给上一级递归
+    }
+}
+```
+
