@@ -9712,3 +9712,365 @@ class Solution {
 }
 ```
 
+## 小结
+
+### 数据流中第k大的元素leetcode 703
+
+设计一个找到数据流中第K大元素的类（class）。注意是排序后的第K大元素，不是第K个不同的元素。
+
+你的 `KthLargest` 类需要一个同时接收整数 `k` 和整数数组`nums` 的构造器，它包含数据流中的初始元素。每次调用 `KthLargest.add`，返回当前数据流中第K大的元素。
+
+**示例:**
+
+```java
+int k = 3;
+int[] arr = [4,5,8,2];
+KthLargest kthLargest = new KthLargest(3, arr);
+kthLargest.add(3);   // returns 4
+kthLargest.add(5);   // returns 5
+kthLargest.add(10);  // returns 5
+kthLargest.add(9);   // returns 8
+kthLargest.add(4);   // returns 8
+```
+
+**说明:**
+你可以假设 `nums` 的长度≥ `k-1` 且`k` ≥ 1。
+
+**解法：**
+
+建立一个二叉搜索树，找出其中第k大的结点，然而超时。
+
+```java
+class KthLargest {
+
+    int k;
+    BST bst;
+
+    static class TreeNode {
+        int val;
+        TreeNode left;
+        TreeNode right;
+
+        TreeNode(int x) {
+            val = x;
+        }
+    }
+
+    static class BST {
+        TreeNode root;
+
+        void insert(int val) {
+            if (root == null) {
+                root = new TreeNode(val);
+                return;
+            }
+            TreeNode node = root;
+            while (node != null) {
+                if (node.val > val) {
+                    if (node.left != null) node = node.left;
+                    else {
+                        node.left = new TreeNode(val);
+                        break;
+                    }
+                } else {
+                    if (node.right != null) node = node.right;
+                    else {
+                        node.right = new TreeNode(val);
+                        break;
+                    }
+                }
+            }
+        }
+
+        int getSize(TreeNode node) {
+            if (node == null) return 0;
+            return getSize(node.left) + getSize(node.right) + 1;
+        }
+
+        TreeNode findKth(TreeNode node, int k) {
+            if (node == null) return null;
+            int rightSize = getSize(node.right);
+            if (k <= rightSize) return findKth(node.right, k);
+            else if (k == rightSize + 1) return node;
+            else return findKth(node.left, k - rightSize - 1);
+        }
+    }
+
+    public KthLargest(int k, int[] nums) {
+        this.k = k;
+        this.bst = new BST();
+        for (int i : nums) bst.insert(i);
+    }
+
+    public int add(int val) {
+        bst.insert(val);
+        return bst.findKth(bst.root, k).val;
+    }
+}
+```
+
+维护一个大小为 k 优先队列（小根堆）包含前 k 大的数，堆顶就是第 k 大的元素。
+
+```java
+class KthLargest {
+    int k;
+    private PriorityQueue<Integer> q;
+
+    public KthLargest(int k, int[] nums) {
+        this.k = k;
+        q = new PriorityQueue<>(k);
+        for (int i : nums) this.add(i);// 不是q.add
+    }
+
+    public int add(int val) {
+        if (q.size() < k) q.add(val);
+        else if (q.peek() < val){
+            q.poll();
+            q.add(val);
+        }
+        return q.peek();
+    }
+}
+```
+
+### 二叉搜索树的最近公共祖先leetcode 235
+
+给定一个二叉搜索树, 找到该树中两个指定节点的最近公共祖先。
+
+[百度百科](https://baike.baidu.com/item/最近公共祖先/8918834?fr=aladdin)中最近公共祖先的定义为：“对于有根树 T 的两个结点 p、q，最近公共祖先表示为一个结点 x，满足 x 是 p、q 的祖先且 x 的深度尽可能大（**一个节点也可以是它自己的祖先**）。”
+
+例如，给定如下二叉搜索树: root = [6,2,8,0,4,7,9,null,null,3,5]
+
+![](img/31.png)
+
+**示例 1:**
+
+```
+输入: root = [6,2,8,0,4,7,9,null,null,3,5], p = 2, q = 8
+输出: 6 
+解释: 节点 2 和节点 8 的最近公共祖先是 6。
+```
+
+**示例 2:**
+
+```
+输入: root = [6,2,8,0,4,7,9,null,null,3,5], p = 2, q = 4
+输出: 2
+解释: 节点 2 和节点 4 的最近公共祖先是 2, 因为根据定义最近公共祖先节点可以为节点本身。
+```
+
+**说明:**
+
+- 所有节点的值都是唯一的。
+- p、q 为不同节点且均存在于给定的二叉搜索树中。
+
+**解法：**
+
+只要一个结点大于等于p，小于等于q，那么这个结点就是 p 和 q 的最近公共祖先。
+
+```java
+class Solution {
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        int smallNode = Math.min(p.val, q.val);
+        int bigNode = Math.max(p.val,q.val);
+        while (true){
+            if (root.val >= smallNode && root.val <= bigNode)
+                return root;
+            else if (root.val < smallNode)root = root.right;
+            else if (root.val > bigNode) root = root.left;
+        }
+    }
+}
+```
+
+### 存在重复元素 III leetcode 220
+
+给定一个整数数组，判断数组中是否有两个不同的索引 *i* 和 *j*，使得 **nums [i]** 和 **nums [j]** 的差的绝对值最大为 *t*，并且 *i* 和 *j* 之间的差的绝对值最大为 *ķ*。
+
+**示例 1:**
+
+```
+输入: nums = [1,2,3,1], k = 3, t = 0
+输出: true
+```
+
+**示例 2:**
+
+```
+输入: nums = [1,0,1,1], k = 1, t = 2
+输出: true
+```
+
+**示例 3:**
+
+```
+输入: nums = [1,5,9,1,5,9], k = 2, t = 3
+输出: false
+```
+
+**解法：**
+
+TreeSet是java自带的二叉搜索树，题中下标 i 和 j 的绝对值最大为 k，实际上在 [i，j] 之间有 k + 1 个元素。
+
+```java
+class Solution {
+    public boolean containsNearbyAlmostDuplicate(int[] nums, int k, int t) {
+        TreeSet<Integer> set = new TreeSet<>();
+        for (int i = 0; i < nums.length; i++) {
+            // treeSet的ceiling会返回大于等于参数的结果
+            Integer succ = set.ceiling(nums[i]);
+            if (succ != null && succ <= nums[i] + t) return true;
+            // treeSet的floor会返回小于等于参数的结果
+            Integer prev = set.floor(nums[i]);
+            if (prev != null && nums[i] <= prev + t) return true;
+            // 保持set中有不超过 k 个元素
+            set.add(nums[i]);
+            if (set.size() > k){
+                set.remove(nums[i - k]);
+            }
+        }
+        return false;
+    }
+}
+```
+
+## 平衡二叉搜索树
+
+### 平衡二叉树leetcode 110
+
+给定一个二叉树，判断它是否是高度平衡的二叉树。
+
+本题中，一棵高度平衡二叉树定义为：
+
+> 一个二叉树*每个节点* 的左右两个子树的高度差的绝对值不超过1。
+
+**示例 1:**
+
+给定二叉树 `[3,9,20,null,null,15,7]`
+
+```
+    3
+   / \
+  9  20
+    /  \
+   15   7
+```
+
+返回 `true` 。
+
+**示例 2:**
+
+给定二叉树 `[1,2,2,3,3,null,null,4,4]`
+
+```
+       1
+      / \
+     2   2
+    / \
+   3   3
+  / \
+ 4   4
+```
+
+返回 `false` 。
+
+**解法：**
+
+使用两个自顶向下的递归。
+
+```java
+class Solution {
+    private int height(TreeNode node) {
+        if (node == null) return 0;
+        return Math.max(height(node.left), height(node.right)) + 1;
+    }
+
+    public boolean isBalanced(TreeNode root) {
+        if (root == null) return true;
+        boolean b = Math.abs(height(root.left) - height(root.right)) < 2;
+        return b && isBalanced(root.left) && isBalanced(root.right);
+    }
+}
+```
+
+然而这种方法会在计算高度时产生重复计算，如果采用自底向上的递归就能避免这个情况。
+
+```java
+class Solution {
+    // 存储节点的高度，以及是否平衡
+    class TreeInfo{
+        final int height;
+        final boolean balanced;
+
+        TreeInfo(int height, boolean balanced){
+            this.height = height;
+            this.balanced = balanced;
+        }
+    }
+
+    private TreeInfo recursion(TreeNode root) {
+        // 递归不再深入的条件，遇到空结点
+        if (root == null) return new TreeInfo(0, true);
+        // 检查左右子树是否平衡
+        TreeInfo left = recursion(root.left);
+        if (!left.balanced) return new TreeInfo(0, false);
+        TreeInfo right = recursion(root.right);
+        if (!right.balanced) return new TreeInfo(0, false);
+        // 如果左右子树都平衡，比较高度差
+        if (Math.abs(left.height - right.height) < 2)
+            return new TreeInfo(Math.max(left.height, right.height) + 1, true);
+        return new TreeInfo(0, false);
+    }
+
+    public boolean isBalanced(TreeNode root) {
+        return recursion(root).balanced;
+    }
+}
+```
+
+### 将有序数组转换为二叉搜索树leetcode 108
+
+将一个按照升序排列的有序数组，转换为一棵高度平衡二叉搜索树。
+
+本题中，一个高度平衡二叉树是指一个二叉树*每个节点* 的左右两个子树的高度差的绝对值不超过 1。
+
+**示例:**
+
+```
+给定有序数组: [-10,-3,0,5,9],
+
+一个可能的答案是：[0,-3,9,-10,null,5]，它可以表示下面这个高度平衡二叉搜索树：
+
+      0
+     / \
+   -3   9
+   /   /
+ -10  5
+```
+
+**解法：**
+
+每次都取数组最中间的数做根节点，这样左右子树的大小就相同了，递归地完成。
+
+不需要旋转子树使树平衡，因为输入的数组有序。
+
+```java
+class Solution {
+    int[] nums;
+    
+    private TreeNode recursion(int left, int right){
+        if (left > right)return null;
+        int mid = left + (right - left) / 2;
+        TreeNode node = new TreeNode(nums[mid]);
+        node.left = recursion(left, mid - 1);
+        node.right = recursion(mid + 1, right);
+        return node;
+    }
+    
+    public TreeNode sortedArrayToBST(int[] nums) {
+        this.nums = nums;
+        return recursion(0, nums.length - 1);
+    }
+}
+```
+
