@@ -9065,6 +9065,70 @@ class Solution {
 }
 ```
 
+### 分割数组的最大值leetcode 410
+
+给定一个非负整数数组和一个整数 *m*，你需要将这个数组分成 *m* 个非空的连续子数组。设计一个算法使得这 *m* 个子数组各自和的最大值最小。
+
+**注意:**
+数组长度 *n* 满足以下条件:
+
+- 1 ≤ *n* ≤ 1000
+- 1 ≤ *m* ≤ min(50, *n*)
+
+**示例:**
+
+```c
+输入:
+nums = [7,2,5,10,8]
+m = 2
+
+输出:
+18
+
+解释:
+一共有四种方法将nums分割为2个子数组。
+其中最好的方式是将其分为[7,2,5] 和 [10,8]，
+因为此时这两个子数组各自的和的最大值为18，在所有情况中最小。
+```
+
+**解法：**
+
+题目要**子数组的和的最大值**最小，那么我们可以用二分确定这个最大值，使子数组全部小于这个最大值时，子数组的数量等于m。使用的是模板1，但是因为不使用 left 作为结果，所以while里的条件是小于等于（要算完最后一个ans）。
+
+```java
+class Solution {
+    public int splitArray(int[] nums, int m) {
+        // 子数组和 可能的范围是 最大值 到 总和
+        long left = 0, right = 0;
+        int n = nums.length;
+        for (int i : nums) {
+            if (i > left) left = i;
+            right += i;
+        }
+        // 在这个范围内找到能把数组分为n个子数组的最大值
+        long ans = right;
+        while (left <= right) {  // 二分
+            long mid = left + (right - left) / 2;
+            long sum = 0;   // 单个子数组的和
+            long cnt = 1;   // 子数组的数量
+            for (int i = 0; i < n; i++) {
+                if (sum + nums[i] > mid) {
+                    cnt++;
+                    sum = nums[i];
+                } else {
+                    sum += nums[i];
+                }
+            }
+            if (cnt <= m) { // 这一步保证找到最小的mid
+                ans = Math.min(ans, mid);
+                right = mid - 1;
+            } else left = mid + 1;
+        }
+        return (int) ans;
+    }
+}
+```
+
 # N叉树
 
 ## 遍历
@@ -10073,4 +10137,1701 @@ class Solution {
     }
 }
 ```
+
+# dp
+
+## 爬楼梯70
+
+假设你正在爬楼梯。需要 *n* 阶你才能到达楼顶。
+
+每次你可以爬 1 或 2 个台阶。你有多少种不同的方法可以爬到楼顶呢？
+
+**注意：**给定 *n* 是一个正整数。
+
+**示例 1：**
+
+```
+输入： 2
+输出： 2
+解释： 有两种方法可以爬到楼顶。
+1.  1 阶 + 1 阶
+2.  2 阶
+```
+
+**示例 2：**
+
+```
+输入： 3
+输出： 3
+解释： 有三种方法可以爬到楼顶。
+1.  1 阶 + 1 阶 + 1 阶
+2.  1 阶 + 2 阶
+3.  2 阶 + 1 阶
+```
+
+**解法：**
+
+```java
+class Solution {
+    int[] dp;
+    
+    public int climbStairs(int n) {
+        dp = new int[n + 1];
+        dp[0] = 1;
+        dp[1] = 1;
+        for(int i = 2; i <= n; i++) {
+            dp[i] = dp[i - 1] + dp[i - 2];
+        }
+        return dp[n];
+    }
+}
+```
+
+## 买卖股票的最佳时机121
+
+给定一个数组，它的第 *i* 个元素是一支给定股票第 *i* 天的价格。
+
+如果你最多只允许完成一笔交易（即买入和卖出一支股票一次），设计一个算法来计算你所能获取的最大利润。
+
+注意：你不能在买入股票前卖出股票。
+
+**示例 1:**
+
+```
+输入: [7,1,5,3,6,4]
+输出: 5
+解释: 在第 2 天（股票价格 = 1）的时候买入，在第 5 天（股票价格 = 6）的时候卖出，最大利润 = 6-1 = 5 。
+注意利润不能是 7-1 = 6, 因为卖出价格需要大于买入价格；同时，你不能在买入前卖出股票。
+```
+
+**示例 2:**
+
+```
+输入: [7,6,4,3,1]
+输出: 0
+解释: 在这种情况下, 没有交易完成, 所以最大利润为 0。
+```
+
+**解法：**
+
+把每个值看成函数曲线上的点，这个函数求导后的积分就是两点之差。牛顿莱布尼兹公式：
+$$
+∫_a^bf(x)dx = F(x)|_a^b = F(b) - F(a)
+$$
+这样就把减法问题转化成了加法问题。而这个加法问题又转化成了最长连续和问题。https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock/solution/121-mai-mai-gu-piao-de-zui-jia-shi-ji-dp-7-xing-ji/
+
+```java
+class Solution {
+    public int maxProfit(int[] prices) {
+        if (prices.length <= 1) return 0;
+        // 求导
+        int[] diff = new int[prices.length - 1];
+        for (int i = 0; i < diff.length; i++) {
+            diff[i] = prices[i + 1] - prices[i];
+        }
+        
+        // 转换为最大连续和的问题
+        // dp[i] = max(0, dp[i - 1] + diff[i])
+        int[] dp = new int[diff.length];
+        dp[0] = Math.max(0, diff[0]);
+        int profit = dp[0];
+        for (int i = 1; i < dp.length; i++) {
+            dp[i] = Math.max(0, dp[i - 1] + diff[i]);
+            profit = Math.max(profit, dp[i]);
+        }
+        return profit;
+    }
+}
+```
+
+优化掉dp数值
+
+```java
+class Solution {
+    public int maxProfit(int[] prices) {
+        if (prices.length <= 1) return 0;
+        // 求导
+        int[] diff = new int[prices.length - 1];
+        for (int i = 0; i < diff.length; i++) {
+            diff[i] = prices[i + 1] - prices[i];
+        }
+        
+        // 转换为最大连续和的问题
+        // 优化：1维数组->一个值
+        int last = 0;
+        int profit = last;
+        for (int i = 0; i < diff.length; i++) {
+            last = Math.max(0, last + diff[i]);
+            profit = Math.max(profit, last);
+        }
+        return profit;
+    }
+}
+```
+
+优化掉diff数组
+
+```java
+class Solution {
+    public int maxProfit(int[] prices) {
+        int last = 0;
+        int profit = last;
+        for (int i = 0; i < prices.length - 1; i++) {
+            last = Math.max(0, last + prices[i + 1] - prices[i]);
+            profit = Math.max(profit, last);
+        }
+        return profit;
+    }
+}
+```
+
+优化完之后只需要扫描一次，现在一旦比买入价低了，就把买入点调到现在，计算现在值和买入值的最大差。
+
+## 最大子序和53
+
+给定一个整数数组 `nums` ，找到一个具有最大和的连续子数组（子数组最少包含一个元素），返回其最大和。
+
+**示例:**
+
+```
+输入: [-2,1,-3,4,-1,2,1,-5,4],
+输出: 6
+解释: 连续子数组 [4,-1,2,1] 的和最大，为 6。
+```
+
+**进阶:**
+
+如果你已经实现复杂度为 O(*n*) 的解法，尝试使用更为精妙的分治法求解。
+
+**解法：**
+
+不同于上一题的是，上一题中导数的值全为0则不挣钱，就是0；而在这个题中[-1]的最大连续和是-1，所以上一题那种以0为最小值的方法不适用，需要稍微修改。
+
+```java
+class Solution {
+    public int maxSubArray(int[] nums) {
+        if (nums.length == 0) return 0;
+        int last = nums[0];
+        int maxLength = last;
+        for (int i = 1; i < nums.length; i++) {
+            last = Math.max(nums[i], last + nums[i]);
+            maxLength = Math.max(maxLength, last);
+        }
+        return maxLength;
+    }
+}
+```
+
+如果当前和左边加起来比当前更小，那么左边就不应该是最大子序和的组成。
+
+## 打家劫舍198
+
+你是一个专业的小偷，计划偷窃沿街的房屋。每间房内都藏有一定的现金，影响你偷窃的唯一制约因素就是相邻的房屋装有相互连通的防盗系统，**如果两间相邻的房屋在同一晚上被小偷闯入，系统会自动报警**。
+
+给定一个代表每个房屋存放金额的非负整数数组，计算你 **不触动警报装置的情况下** ，一夜之内能够偷窃到的最高金额。
+
+**示例 1:**
+
+```
+输入: [1,2,3,1]
+输出: 4
+解释: 偷窃 1 号房屋 (金额 = 1) ，然后偷窃 3 号房屋 (金额 = 3)。
+     偷窃到的最高金额 = 1 + 3 = 4 。
+```
+
+**示例 2:**
+
+```
+输入: [2,7,9,3,1]
+输出: 12
+解释: 偷窃 1 号房屋 (金额 = 2), 偷窃 3 号房屋 (金额 = 9)，接着偷窃 5 号房屋 (金额 = 1)。
+     偷窃到的最高金额 = 2 + 9 + 1 = 12 。
+```
+
+**解法：**
+
+数组长度为0，输出0；长度为1，输出第一个元素；长度为2；输出两个元素中较大的一个。
+
+直接用参数中的nums数组作dp数组。递推式：`dp[i] = nums[i] + max(dp[i - 2], dp[i - 3])`。
+
+dp[i]代表偷到第 i 家可以偷到的最大值。例子：[2, 1, 1, 2]的dp数组[2, 1, 3, 4]
+
+```java
+class Solution {
+    public int rob(int[] nums) {
+        int len = nums.length;
+        if (len == 0) return 0;
+        if (len == 1) return nums[0];
+        if (len == 2) return Math.max(nums[0], nums[1]);
+        if (len == 3) return Math.max(nums[0] + nums[2], nums[1]);
+        nums[2] = Math.max(nums[0] + nums[2], nums[1]);
+        int maxn = nums[2];
+        for (int i = 3; i < len; i++) {
+            nums[i] = nums[i] + Math.max(nums[i - 2], nums[i - 3]);
+            maxn = Math.max(maxn, nums[i]);
+        }
+        return maxn;
+    }
+}
+```
+
+# 6.3初级算法卡片
+
+## 位1的个数191
+
+编写一个函数，输入是一个无符号整数，返回其二进制表达式中数字位数为 ‘1’ 的个数（也被称为[汉明重量](https://baike.baidu.com/item/汉明重量)）。
+
+**示例 1：**
+
+```
+输入：00000000000000000000000000001011
+输出：3
+解释：输入的二进制串 00000000000000000000000000001011 中，共有三位为 '1'。
+```
+
+**示例 2：**
+
+```
+输入：00000000000000000000000010000000
+输出：1
+解释：输入的二进制串 00000000000000000000000010000000 中，共有一位为 '1'。
+```
+
+**示例 3：**
+
+```
+输入：11111111111111111111111111111101
+输出：31
+解释：输入的二进制串 11111111111111111111111111111101 中，共有 31 位为 '1'。
+```
+
+**提示：**
+
+- 请注意，在某些语言（如 Java）中，没有无符号整数类型。在这种情况下，输入和输出都将被指定为有符号整数类型，并且不应影响您的实现，因为无论整数是有符号的还是无符号的，其内部的二进制表示形式都是相同的。
+- 在 Java 中，编译器使用[二进制补码](https://baike.baidu.com/item/二进制补码/5295284)记法来表示有符号整数。因此，在上面的 **示例 3** 中，输入表示有符号整数 `-3`。
+
+**进阶**:
+如果多次调用这个函数，你将如何优化你的算法？
+
+**解法：**
+
+n和n-1按位与会把n的最后一个二进制1变成0，循环到n=0时，循环次数即为所求。
+
+```java
+public class Solution {
+    // you need to treat n as an unsigned value
+    public int hammingWeight(int n) {
+        int nums = 0;
+        while (n != 0) {
+            nums++;
+            n &= (n - 1);
+        }
+        return nums;
+    }
+}
+```
+
+## 汉明距离461
+
+两个整数之间的[汉明距离](https://baike.baidu.com/item/汉明距离)指的是这两个数字对应二进制位不同的位置的数目。
+
+给出两个整数 `x` 和 `y`，计算它们之间的汉明距离。
+
+**注意：**
+0 ≤ `x`, `y` < 231.
+
+**示例:**
+
+```
+输入: x = 1, y = 4
+
+输出: 2
+
+解释:
+1   (0 0 0 1)
+4   (0 1 0 0)
+       ↑   ↑
+
+上面的箭头指出了对应二进制位不同的位置。
+```
+
+**解法：**
+
+```java
+class Solution {
+    public int hammingDistance(int x, int y) {
+        int z = x ^ y;
+        int mask = 1;
+        int distance = 0;
+        while (z != 0) {
+            if((z & mask) == 1) distance++;
+            z = z >> 1;
+        }
+        return distance;
+    }
+}
+```
+
+## 字符串转换整数 (atoi)8
+
+请你来实现一个 `atoi` 函数，使其能将字符串转换成整数。
+
+首先，该函数会根据需要丢弃无用的开头空格字符，直到寻找到第一个非空格的字符为止。接下来的转化规则如下：
+
+- 如果第一个非空字符为正或者负号时，则将该符号与之后面尽可能多的连续数字字符组合起来，形成一个有符号整数。
+- 假如第一个非空字符是数字，则直接将其与之后连续的数字字符组合起来，形成一个整数。
+- 该字符串在有效的整数部分之后也可能会存在多余的字符，那么这些字符可以被忽略，它们对函数不应该造成影响。
+
+注意：假如该字符串中的第一个非空格字符不是一个有效整数字符、字符串为空或字符串仅包含空白字符时，则你的函数不需要进行转换，即无法进行有效转换。
+
+在任何情况下，若函数不能进行有效的转换时，请返回 0 。
+
+**提示：**
+
+- 本题中的空白字符只包括空格字符 `' '` 。
+- 假设我们的环境只能存储 32 位大小的有符号整数，那么其数值范围为 [−231, 231 − 1]。如果数值超过这个范围，请返回  INT_MAX (231 − 1) 或 INT_MIN (−231) 。
+
+ 
+
+**示例 1:**
+
+```
+输入: "42"
+输出: 42
+```
+
+**示例 2:**
+
+```
+输入: "   -42"
+输出: -42
+解释: 第一个非空白字符为 '-', 它是一个负号。
+     我们尽可能将负号与后面所有连续出现的数字组合起来，最后得到 -42 。
+```
+
+**示例 3:**
+
+```
+输入: "4193 with words"
+输出: 4193
+解释: 转换截止于数字 '3' ，因为它的下一个字符不为数字。
+```
+
+**示例 4:**
+
+```
+输入: "words and 987"
+输出: 0
+解释: 第一个非空字符是 'w', 但它不是数字或正、负号。
+     因此无法执行有效的转换。
+```
+
+**示例 5:**
+
+```
+输入: "-91283472332"
+输出: -2147483648
+解释: 数字 "-91283472332" 超过 32 位有符号整数范围。 
+     因此返回 INT_MIN (−231) 。
+```
+
+**解法：**
+
+朴素匹配+封装类
+
+```java
+class Solution {
+    public int myAtoi(String str) {
+        str = str.trim();
+        int idx = 0;
+        for (int i = 0; i < str.length(); i++) {
+            char ch = str.charAt(i);
+            if ((ch == '+' || ch == '-') && i == 0) {
+                idx++;
+            } else if (ch >= '0' && ch <= '9') {
+                idx++;
+            } else break;
+        }
+        if (idx == 0) return 0;
+        try{
+            Double bd = new Double(str.substring(0, idx));
+            if (bd > Integer.MAX_VALUE) return Integer.MAX_VALUE;
+            if (bd < Integer.MIN_VALUE) return Integer.MIN_VALUE;
+            return bd.intValue();
+        } catch(NumberFormatException e) {
+            return 0;
+        }
+    }
+}
+```
+
+也可以使用DFA：
+
+![](E:/kejian/知识总结/img/36.png)
+
+## 外观数列38
+
+「外观数列」是一个整数序列，从数字 1 开始，序列中的每一项都是对前一项的描述。前五项如下：
+
+```
+1.     1
+2.     11
+3.     21
+4.     1211
+5.     111221
+```
+
+`1` 被读作 `"one 1"` (`"一个一"`) , 即 `11`。
+`11` 被读作 `"two 1s"` (`"两个一"`）, 即 `21`。
+`21` 被读作 `"one 2"`,  "`one 1"` （`"一个二"` , `"一个一"`) , 即 `1211`。
+
+给定一个正整数 *n*（1 ≤ *n* ≤ 30），输出外观数列的第 *n* 项。
+
+注意：整数序列中的每一项将表示为一个字符串。
+
+ 
+
+**示例 1:**
+
+```
+输入: 1
+输出: "1"
+解释：这是一个基本样例。
+```
+
+**示例 2:**
+
+```
+输入: 4
+输出: "1211"
+解释：当 n = 3 时，序列是 "21"，其中我们有
+```
+
+**解法：**
+
+递归+快慢指针
+
+```java
+class Solution {
+    public String countAndSay(int n) {
+        if (n == 1) return "1";
+        String str = countAndSay(n - 1);
+        StringBuilder sb = new StringBuilder();
+        int fast = 0, slow = 0;
+        while (fast < str.length()) {
+            if (str.charAt(fast) == str.charAt(slow)) {
+                fast++;
+            } else {
+                sb.append(fast - slow).append(str.charAt(slow));
+                slow = fast;
+            }
+        }
+        sb.append(fast - slow).append(str.charAt(slow));
+        return sb.toString();
+    }
+}
+```
+
+# 6.6初级算法卡片
+
+## 计数质数204
+
+统计所有小于非负整数 *n* 的质数的数量。
+
+**示例:**
+
+```
+输入: 10
+输出: 4
+解释: 小于 10 的质数一共有 4 个, 它们是 2, 3, 5, 7 。
+```
+
+**解法：**
+
+普通的解法：
+
+```java
+class Solution {
+    public int countPrimes(int n) {
+        int res = 0;
+        for (int i = 2; i < n; i++) {
+            if (isPrime(i)) res++;
+        }
+        return res;
+    }
+    
+    private boolean isPrime(int n) {
+        if (n < 2) return false;
+        for (int i = 2; i * i <= n; i++) {
+            if (n % i == 0) return false;
+        }
+        return true;
+    }
+}
+```
+
+空间换时间：
+
+初始把所有数字都视为质数，每个数（i）的平方（i*i）以及（i * i + i）都不是质数。最后数还剩几个质数。
+
+```java
+class Solution {
+    public int countPrimes(int n) {
+        boolean[] isPrime = new boolean[n];
+        Arrays.fill(isPrime, true);
+        for(int i = 2; i * i < n; i++) {
+            if (isPrime[i]) {
+                for (int j = i * i; j < n; j += i)
+                    isPrime[j] = false;
+            }
+        }
+        int count = 0;
+        for (int i = 2; i < n; i++) {
+            if (isPrime[i]) count++;
+        }
+        return count;
+    }
+}
+```
+
+## 颠倒二进制位190
+
+颠倒给定的 32 位无符号整数的二进制位。
+
+**示例 1：**
+
+```
+输入: 00000010100101000001111010011100
+输出: 00111001011110000010100101000000
+解释: 输入的二进制串 00000010100101000001111010011100 表示无符号整数 43261596，
+     因此返回 964176192，其二进制表示形式为 00111001011110000010100101000000。
+```
+
+**示例 2：**
+
+```
+输入：11111111111111111111111111111101
+输出：10111111111111111111111111111111
+解释：输入的二进制串 11111111111111111111111111111101 表示无符号整数 4294967293，
+     因此返回 3221225471 其二进制表示形式为 10111111111111111111111111111111 。
+```
+
+**提示：**
+
+- 请注意，在某些语言（如 Java）中，没有无符号整数类型。在这种情况下，输入和输出都将被指定为有符号整数类型，并且不应影响您的实现，因为无论整数是有符号的还是无符号的，其内部的二进制表示形式都是相同的。
+- 在 Java 中，编译器使用[二进制补码](https://baike.baidu.com/item/二进制补码/5295284)记法来表示有符号整数。因此，在上面的 **示例 2** 中，输入表示有符号整数 `-3`，输出表示有符号整数 `-1073741825`。
+
+**进阶**:
+如果多次调用这个函数，你将如何优化你的算法？
+
+**解法：**
+
+这里值给出最简单的移位解法。
+
+```java
+public class Solution {
+    // you need treat n as an unsigned value
+    public int reverseBits(int n) {
+        int res = 0;
+        for (int i = 31; i >= 0; i--) {
+            res += (n & 1) << i;
+            n = n >> 1;
+        }
+        return res;
+    }
+}
+```
+
+## 3的幂326
+
+给定一个整数，写一个函数来判断它是否是 3 的幂次方。
+
+**示例 1:**
+
+```
+输入: 27
+输出: true
+```
+
+**示例 2:**
+
+```
+输入: 0
+输出: false
+```
+
+**示例 3:**
+
+```
+输入: 9
+输出: true
+```
+
+**示例 4:**
+
+```
+输入: 45
+输出: false
+```
+
+**进阶：**
+你能不使用循环或者递归来完成本题吗？
+
+**解法：**
+
+一般的方法，注意1也是3的幂（3^0）。
+
+```java
+class Solution {
+    public boolean isPowerOfThree(int n) {
+        if (n < 1) return false;
+        while (n % 3 == 0) {
+            n /= 3;
+        }
+        return n == 1;
+    }
+}
+```
+
+**数学方法：**
+$$
+n = 3^i \\
+i = log_3(n) = \frac{log(n)}{log(3)}
+$$
+使用了换底公式，代码应当如下：
+
+```java
+public class Solution {
+    public boolean isPowerOfThree(int n) {
+        return (Math.log10(n) / Math.log10(3)) % 1 == 0;
+    }
+}
+```
+
+在比较双精度数时不应使用 ==。这是因为 Math.log10(n)/Math.log10(3) 的结果可能是 5.0000001 或 4.9999999。为了解决这个问题，我们需要将结果与 `epsilon` 进行比较。而这个`epsilon`就是精度，在这个题中精度设为0.0000000001，即可通过
+
+```java
+class Solution {
+    public boolean isPowerOfThree(int n) {
+        return (Math.log(n) / Math.log(3) + 0.0000000001) % 1 <= 2 * 0.0000000001;
+    }
+}
+```
+
+**计算机数学方法：**
+
+Int的最大值大约为3^19.56，所以最大的3的幂就是3的19次，即1162261467。1162261467 % n == 0就可以证明n是3的幂。
+
+```java
+public class Solution {
+    public boolean isPowerOfThree(int n) {
+        return n > 0 && 1162261467 % n == 0;
+    }
+}
+```
+
+## 打乱数组384
+
+打乱一个没有重复元素的数组。
+
+**示例:**
+
+```java
+// 以数字集合 1, 2 和 3 初始化数组。
+int[] nums = {1,2,3};
+Solution solution = new Solution(nums);
+
+// 打乱数组 [1,2,3] 并返回结果。任何 [1,2,3]的排列返回的概率应该相同。
+solution.shuffle();
+
+// 重设数组到它的初始状态[1,2,3]。
+solution.reset();
+
+// 随机返回数组[1,2,3]打乱后的结果。
+solution.shuffle();
+```
+
+**解法：**
+
+Fisher-Yates 洗牌算法，在每次迭代中，生成一个范围在当前下标到数组末尾元素下标之间的随机整数。接下来，将当前元素和随机选出的下标所指的元素互相交换，当前元素是可以和它本身互相交换的，否则生成最后的排列组合的概率就不对了。https://leetcode-cn.com/problems/shuffle-an-array/solution/da-luan-shu-zu-by-leetcode/
+
+```java
+class Solution {
+    private int[] array;
+    private int[] original;
+    private Random random;
+
+    public Solution(int[] nums) {
+        array = nums;
+        original = nums.clone();
+        random = new Random();
+    }
+    
+    /** Resets the array to its original configuration and return it. */
+    public int[] reset() {
+        array = original;
+        original = original.clone();
+        return array;
+    }
+    
+    /** Returns a random shuffling of the array. */
+    public int[] shuffle() {
+        for (int i = 0; i < array.length; i++) {
+            int index = random.nextInt(array.length - i) + i;
+            int temp = array[i];
+            array[i] = array[index];
+            array[index] = temp;
+        }
+        return array;
+    }
+}
+```
+
+# 再战dp
+
+dp的特性：
+
+- 备忘录，存状态，消除重叠子问题
+- 状态迁移方程
+- 最优子结构
+
+首先要判断是否符合最优子结构。**要符合「最优子结构」，子问题间必须互相独立**。比如要总成绩最高，每门课都要满分，这就符合最优子结构；而两名课成绩相互制约，语文高了，数学必低，就不符合最优子结构。
+
+然后要求状态迁移方程，以找零钱问题为例：
+
+## 零钱兑换322
+
+给定不同面额的硬币 coins 和一个总金额 amount。编写一个函数来计算可以凑成总金额所需的最少的硬币个数。如果没有任何一种硬币组合能组成总金额，返回 -1。
+
+**示例 1:**
+
+```
+输入: coins = [1, 2, 5], amount = 11
+输出: 3 
+解释: 11 = 5 + 5 + 1
+```
+
+**示例 2:**
+
+```
+输入: coins = [2], amount = 3
+输出: -1
+```
+
+**说明:**
+你可以认为每种硬币的数量是无限的。
+
+**状态迁移方程：**
+
+1. **确定「base case」**，amount 为 0 时，返回 0 .
+2. **确定「状态」，也就是原问题和子问题中会变化的变量**。由于硬币数量无限，硬币的面额也是题目给定的，只有目标金额会不断地向 base case 靠近，所以唯一的「状态」就是目标金额 `amount`。
+3. **确定「选择」，也就是导致「状态」产生变化的行为**。目标金额为什么变化呢，因为你在选择硬币，你每选择一枚硬币，就相当于减少了目标金额。所以说所有硬币的面值，就是你的「选择」。
+4. **明确** **`dp`** **函数/数组的定义**。本题中`dp(n)` 的定义：输入一个目标金额 `n`，返回凑出目标金额 `n` 的最少硬币数量。
+
+解决该问题的核心伪码：
+
+```java
+int res = Integer.MAX_INT;
+for (int c : coins) {	// 对于每一种面值，c是面值，n是目标金额
+	res = Math.min(res, 1 + dp[n - c]);	// 一个c面值 + (n - c的最少硬币)
+}
+```
+
+状态迁移方程：
+
+![](E:/kejian/知识总结/img/37.png)
+
+完整的解决方法：
+
+```java
+class Solution {
+    public int coinChange(int[] coins, int amount) {
+        int[] dp = new int[amount + 1];
+        if (amount == 0) return 0;
+        Arrays.fill(dp, amount + 1);	// amount + 1表示最大值
+        dp[0] = 0;
+        for (int i = 1; i < dp.length; i++) {
+            for (int c : coins) {
+                if (c > i) continue;
+                dp[i] = Math.min(dp[i], 1 + dp[i - c]);
+            }
+        }
+        return (dp[amount] == amount + 1) ? -1 : dp[amount];
+    }
+}
+```
+
+## 最长上升子序列300
+
+给定一个无序的整数数组，找到其中最长上升子序列的长度。
+
+**示例:**
+
+```
+输入: [10,9,2,5,3,7,101,18]
+输出: 4 
+```
+
+**解释:** 最长的上升子序列是 [2,3,7,101]，它的长度是 4。
+
+**说明:**
+
+- 可能会有多种最长上升子序列的组合，你只需要输出对应的长度即可。
+- 你算法的时间复杂度应该为 O(n2) 。
+
+**进阶:** 你能将算法的时间复杂度降低到 O(n log n) 吗?
+
+**注意**：「子序列」和「子串」这两个名词的区别，子串一定是连续的，而子序列不一定是连续的。下面先来设计动态规划算法解决这个问题。
+
+**解法：**
+
+`dp[i]`数组表示以`nums[i]`结束的最长上升子序列的长度，`dp`数组的最大值即为所求。
+
+```java
+class Solution {
+    public int lengthOfLIS(int[] nums) {
+        if (nums.length == 0) return 0;
+        int[] dp = new int[nums.length];
+        Arrays.fill(dp, 1);
+        for (int i = 0; i < nums.length; i++) {
+            for (int j = 0; j < i; j++) {
+                if (nums[j] < nums[i]) {
+                    dp[i] = Math.max(dp[i], dp[j] + 1);        
+                }
+            }
+        }
+        int res = 0;
+        for (int i : dp) {
+            if (i > res) res = i;
+        }
+        return res;
+    }
+}
+```
+
+## 最大子序和53
+
+![](E:/kejian/知识总结/img/38.jpg)
+
+**解法：**
+
+`dp[i]`表示以`nums[i]`结尾的最大连续和。
+
+所以状态转移方程如下：
+
+```java
+// 要么自成一派，要么和前面的子数组合并
+dp[i] = Math.max(nums[i], nums[i] + dp[i - 1]);
+```
+
+完整解法：
+
+```java
+class Solution {
+    public int maxSubArray(int[] nums) {
+        if (nums.length == 0) return 0;
+        int[] dp = new int[nums.length];
+        dp[0] = nums[0];
+        for (int i = 1; i < nums.length; i++) {
+            dp[i] = Math.max(dp[i - 1] + nums[i], nums[i]);
+        }
+        int res = Integer.MIN_VALUE;
+        for (int i : dp) {
+            if (i > res) res = i;
+        }
+        return res;
+    }
+}
+```
+
+可以看出`dp[i]`只和`dp[i-1]`有关，所以可以压缩状态，降低空间复杂度：
+
+```java
+class Solution {
+    public int maxSubArray(int[] nums) {
+        if (nums.length == 0) return 0;
+        int dp_0 = nums[0];
+        int dp_1 = 0;
+        int res = dp_0;
+        for (int i = 1; i < nums.length; i++) {
+            dp_1 = Math.max(dp_0 + nums[i], nums[i]);
+            dp_0 = dp_1;
+            res = Math.max(res, dp_1);
+        }
+        return res;
+    }
+}
+```
+
+`dp_0`和`dp_1`二合一：
+
+```java
+class Solution {
+    public int maxSubArray(int[] nums) {
+        if (nums.length == 0) return 0;
+        int dp = nums[0];
+        int res = dp;
+        for (int i = 1; i < nums.length; i++) {
+            dp = Math.max(dp + nums[i], nums[i]);
+            res = Math.max(res, dp);
+        }
+        return res;
+    }
+}
+```
+
+## 小结
+
+最长上升子序列和最大子序和的`dp[i]`都是「以`nums[i]`为结尾的最长上升子序列/最大子数组和」。然后求dp数组的最大值。零钱兑换的`dp[i]`也是凑齐`i`元所需要的硬币个数。
+
+## 0-1背包问题
+
+https://labuladong.gitbook.io/algo/dong-tai-gui-hua-xi-lie/bei-bao-wen-ti
+
+给你一个可装载重量为 `W` 的背包和 `N` 个物品，每个物品有重量和价值两个属性。其中第 `i` 个物品的重量为 `wt[i]`，价值为 `val[i]`，现在让你用这个背包装物品，最多能装的价值是多少？
+
+举个简单的例子，输入如下：
+
+```python
+N = 3, W = 4
+wt = [2, 1, 3]
+val = [4, 2, 3]
+```
+
+算法返回 6，选择前两件物品装进背包，总重量 3 小于 `W`，可以获得最大价值 6。
+
+**解法：**
+
+状态有两个维度，一个是背包的总容量`w`，一个是现在要装的物品`i`。
+
+选择只有装或不装，如果背包容量小于物品重量，那就只能选择不装。
+
+`dp[i][w]`就是容量为`w`的背包装了对`i`个物品做出最优选择后的总价值。
+
+如果不装：`dp[i][w] = dp[i - 1][w]`，意思是没有装第`i`个物品，总价值没变。
+
+如果装：`dp[i][w] = dp[i - w][w - 第i个物品的重量] + 第i个物品的价值`，意思是没装这个物品时背包的最大价值加上这个物品的价值。
+
+`dp`数组的最终结果如下，纵轴为`i`，横轴为`w`，下标都是从1开始。
+
+| 0    | 4    | 4    | 4    |
+| ---- | ---- | ---- | ---- |
+| 2    | 4    | 6    | 6    |
+| 2    | 4    | 6    | 6    |
+
+```c++
+int knapsack(int W, int N, vector<int>& wt, vector<int>& val) {
+    // base case 已初始化
+    vector<vector<int>> dp(N + 1, vector<int>(W + 1, 0));
+    // 相当于 new int[N + 1][W + 1]; 全部初始化为0
+    for (int i = 1; i <= N; i++) {
+        for (int w = 1; w <= W; w++) {
+            if (w - wt[i-1] < 0) {
+                // 这种情况下只能选择不装入背包
+                dp[i][w] = dp[i - 1][w];
+            } else {
+                // 装入或者不装入背包，择优
+                dp[i][w] = max(dp[i - 1][w - wt[i-1]] + val[i-1], 
+                               dp[i - 1][w]);
+            }
+        }
+    }
+    return dp[N][W];
+}
+```
+
+## 子集背包·分割等和子集416
+
+![](E:/kejian/知识总结/img/39.jpg)
+
+**分析：**
+
+要分割成两个子集，问题就可以转化为：
+
+**给一个可装载重量为** **`sum / 2`** **的背包和** **`N`** **个物品，每个物品的重量为 `nums[i]`。现在让你装物品，是否存在一种装法，能够恰好将背包装满**？
+
+状态和上一个问题一样，`i`是当前要装的数字，`w`是背包的容量。
+
+转移也和上一个问题一样，装和不装。
+
+`dp[i][w]`就是对前`i`个选择装与不装，总和是否等于`w`，如果`dp[nums.length][sum/2] == true`，就表示能装满。
+
+如果不装：`dp[i][w] = dp[i - 1][w]`
+
+如果装：`dp[i][w] = dp[i - 1][w - i的值]`。
+
+**解法：**
+
+```java
+class Solution {
+    public boolean canPartition(int[] nums) {
+        int sum = 0;
+        for (int n : nums) {
+            sum += n;
+        }
+        if (sum % 2 != 0) return false;
+        sum /= 2;
+        boolean[][] dp = new boolean[nums.length + 1][sum + 1];
+        for (int i = 0; i < dp.length; i++) dp[i][0] = true;
+        for (int i = 1; i < dp.length; i++) {
+            for (int w = 1; w < dp[i].length; w++) {
+                if (w < nums[i - 1]) dp[i][w] = dp[i - 1][w];
+                else dp[i][w] = dp[i - 1][w] | dp[i - 1][w - nums[i - 1]];
+            }
+        }
+        return dp[nums.length][sum];
+    }
+}
+```
+
+`dp`数组的每一行只和上一行有关，就可以压缩状态，使`dp`变为一维数组，为了避免改变数组的前半部分对后面的干扰，我们从右往左遍历：
+
+```java
+class Solution {
+    public boolean canPartition(int[] nums) {
+        int sum = 0;
+        for (int n : nums) {
+            sum += n;
+        }
+        if (sum % 2 != 0) return false;
+        sum /= 2;
+        boolean[] dp = new boolean[sum + 1];
+        dp[0] = true;
+        for (int i = 0; i < nums.length; i++) {
+            for (int w = sum; w > 0; w--) {
+                if (w < nums[i]) dp[w] = dp[w];
+                else dp[w] = dp[w] | dp[w - nums[i]];
+            }
+        }
+        return dp[sum];
+    }
+}
+```
+
+## 完全背包·零钱兑换II512
+
+![](E:/kejian/知识总结/img/40.jpg)
+
+**分析：**
+
+有一个背包，最大容量为 `amount`，有一系列物品 `coins`，每个物品的重量为 `coins[i]`，**每个物品的数量无限**。请问有多少种方法，能够把背包恰好装满？
+
+数量无限 == 完全背包问题。
+
+状态：`i`是使用第几种面值，`j`是最大容量。
+
+转移：是否装进背包。
+
+`dp[i][j]`就是使用前`i`种面值，有几种方法凑出金额`j`。
+
+如果不使用面值`i`，`dp[i][j] = dp[i - 1][j]`
+
+如果使用面值`i`，`dp[i][j] = dp[i][j - i的面值] + dp[i - 1][j] `。即使用和不使用面值`i`的种数之和，因为问的是有几种方法。
+
+**解法：**
+
+```java
+class Solution {
+    public int change(int amount, int[] coins) {
+        int[][] dp = new int[coins.length + 1][amount + 1];
+        // 不使用硬币凑不齐金额，凑出0元只有无为而治一种方法
+        for (int i = 0; i <= amount; i++) dp[0][i] = 0;
+        for (int i = 0; i < dp.length; i++) dp[i][0] = 1;
+        for (int i = 1; i < dp.length; i++) {
+            for (int j = 1; j < dp[i].length; j++) {
+                if (j < coins[i - 1]) dp[i][j] = dp[i - 1][j];
+                else dp[i][j] = dp[i - 1][j] + dp[i][j - coins[i - 1]];
+            }
+        }
+        return dp[coins.length][amount];
+    }
+}
+```
+
+压缩状态：
+
+```java
+class Solution {
+    public int change(int amount, int[] coins) {
+        int[] dp = new int[amount + 1];
+        dp[0] = 1;
+        for (int i = 0; i < coins.length; i++) {
+            for (int j = 1; j < dp.length; j++) {
+                if (j >= coins[i])
+                    dp[j] = dp[j] + dp[j - coins[i]];
+            }
+        }
+        return dp[amount];
+    }
+}
+```
+
+## 背包小结
+
+背包问题要有个容量（总数，背包大小），要有一数组的数字往背包里装。
+
+两个状态：背包大小、正在装第几个
+
+转移：装或不装
+
+`dp[i][j]`在这几个问题中分别为背包的最大价值、是否正好装满、有几种方法。都是最优子结构。
+
+## 编辑距离72
+
+![](E:/kejian/知识总结/img/41.png)
+
+**分析：**
+
+可以有插入、删除、替换三种方法。
+
+将二位的`dp`数组的第一个维度为`s1`的前`i`个字母，第二个维度定义为`s2`的前`j`个字母。
+
+`dp[i][j]`就是`s1`的前`i`个字母需要几步换到`s2`的前`j`个字母。
+
+![](E:/kejian/知识总结/img/42.jpg)
+
+如果`s1.charAt[i] != s2.charAt[j]`，`dp[i][j] = dp[i - 1][j - 1]`；
+
+否则，`dp[i][j] = 1 + min(dp[i][j - 1], dp[i - 1][j], dp[i - 1][j - 1])`。
+
+横着或者竖着加一代表插入或删除，`s1`插入就相当于`s2`删除，都是一步。
+
+斜着加一代表替换。
+
+**解法：**
+
+```java
+class Solution {
+    public int minDistance(String word1, String word2) {
+        int[][] dp = new int[word1.length() + 1][word2.length() + 1];
+        for (int i = 0; i < dp.length; i++) dp[i][0] = i;
+        for (int i = 0; i < dp[0].length; i++) dp[0][i] = i;
+
+        for (int i = 1; i < dp.length; i++) {
+            for (int j = 1; j < dp[i].length; j++) {
+                if (word1.charAt(i - 1) == word2.charAt(j - 1)) {
+                    dp[i][j] = dp[i - 1][j - 1];
+                }
+                else {
+                    dp[i][j] = 1 + tmin(dp[i][j - 1], dp[i - 1][j], dp[i - 1][j - 1]);
+                }
+            }
+        }
+        return dp[word1.length()][word2.length()];
+    }
+
+    private int tmin(int a, int b, int c) {
+        return Math.min(a, Math.min(b, c));
+    }
+}
+```
+
+妙啊！
+
+## 鸡蛋掉落887
+
+你将获得 K 个鸡蛋，并可以使用一栋从 1 到 N  共有 N 层楼的建筑。
+
+每个蛋的功能都是一样的，如果一个蛋碎了，你就不能再把它掉下去。
+
+你知道存在楼层 F ，满足 0 <= F <= N 任何从高于 F 的楼层落下的鸡蛋都会碎，从 F 楼层或比它低的楼层落下的鸡蛋都不会破。
+
+每次移动，你可以取一个鸡蛋（如果你有完整的鸡蛋）并把它从任一楼层 X 扔下（满足 1 <= X <= N）。
+
+你的目标是确切地知道 F 的值是多少。
+
+无论 F 的初始值如何，你确定 F 的值的最小移动次数是多少？
+
+示例 1：
+
+```
+输入：K = 1, N = 2
+输出：2
+解释：
+鸡蛋从 1 楼掉落。如果它碎了，我们肯定知道 F = 0 。
+否则，鸡蛋从 2 楼掉落。如果它碎了，我们肯定知道 F = 1 。
+如果它没碎，那么我们肯定知道 F = 2 。
+因此，在最坏的情况下我们需要移动 2 次以确定 F 是多少。
+```
+
+
+示例 2：
+
+```
+输入：K = 2, N = 6
+输出：3
+```
+
+
+示例 3：
+
+```
+输入：K = 3, N = 14
+输出：4
+```
+
+
+提示：
+
+- 1 <= K <= 100
+- 1 <= N <= 10000
+
+**分析：**
+
+状态：剩余几个鸡蛋，剩余几层楼没确定
+
+转移：选择去那层楼扔鸡蛋。
+
+`dp[i][j]`就是输入K = i，N = 6时的输出。
+
+base case：当只剩一个鸡蛋(k == 1)时需要从上往下试N次，所以`dp[1][j] = j`。
+
+当`K >= 2`时，可以先用二分缩小楼层范围，当`k == 1` 时，再从下往上试。
+
+<img src="E:/kejian/知识总结/img/43.jpg" style="zoom:50%;" />
+
+```java
+class Solution {
+    public int superEggDrop(int K, int N) {
+        int[][] dp = new int[K + 1][N + 1];
+        for (int i = 0; i < dp[0].length; i++) dp[1][i] = i;
+        for (int i = 2; i < dp.length; i++) {
+            for (int j = 1; j < dp[i].length; j++) {
+                dp[i][j] = Integer.MAX_VALUE;
+                for (int k = 1; k <= j; k++) {
+                    dp[i][j] = Math.min(dp[i][j],Math.max(dp[i][j - k], dp[i - 1][k - 1]) + 1);
+                }
+            }
+        }
+        return dp[K][N];
+    }
+}
+```
+
+第三层循环就是选择去哪一层扔鸡蛋的过程，要取最坏情况下的最小值，图中的 i 就是代码中的 k。
+
+然而超时。需要简化第三层循环。
+
+`dp[i][j - k]`、`dp[i - 1][k - 1]`和`Math.max(dp[i][j - k], dp[i - 1][k - 1])`的函数图像如下：
+
+![](E:/kejian/知识总结/img/44.jpg)
+
+所以可以用二分求`Math.max(dp[i][j - k], dp[i - 1][k - 1])`的最小值，`dp[i][j - k] > dp[i - 1][k - 1]`就向右找，反之向左找。
+
+**最终解法：**
+
+```java
+class Solution {
+    public int superEggDrop(int K, int N) {
+        int[][] dp = new int[K + 1][N + 1];
+        for (int i = 0; i < dp[0].length; i++) dp[1][i] = i;
+        for (int i = 2; i < dp.length; i++) {
+            for (int j = 1; j < dp[i].length; j++) {
+                int left = 1, right = j;
+                int res = Integer.MAX_VALUE;
+                while (left <= right) {
+                    int mid = left + (right - left) / 2;
+                    int broken = dp[i - 1][mid - 1];
+                    int not_broken = dp[i][j - mid];
+                    if (broken > not_broken) {
+                        right = mid - 1;
+                        res = Math.min(res, broken + 1);
+                    } else {
+                        left = mid + 1;
+                        res = Math.min(res, not_broken + 1);
+                    }
+                }
+                dp[i][j] = res;
+            }
+        }
+        return dp[K][N];
+    }
+}
+```
+
+## 戳气球312
+
+![](E:/kejian/知识总结/img/45.jpg)
+
+**分析：**
+
+每戳破一个气球，nums数组就会改变，看似子问题不独立，但是，求最值问题一定可以穷举得到结果。
+
+状态：i 和 j 本身就是状态，表示起始的气球和中止的气球。
+
+转移：戳破 i 和 j 之间即（i，j）中的一个气球。
+
+`dp[i][j]`表示把 i ，j 开区间内的所有气球戳爆获得的最大钱数。题目中说可以假设`nums[-1] = nums[n] = 1`，所以`dp[-1][n]`就是最终答案。
+
+状态转移方程：`dp[i][j] = dp[i][k] + dp[k][j] + nums[i] * nums[j] * nums[k]`。
+
+只需要用到上三角矩阵，而且是从下往上dp的。
+
+![](E:/kejian/知识总结/img/46.jpeg)
+
+**解法：**
+
+```java
+class Solution {
+    public int maxCoins(int[] nums) {
+        int len = nums.length;
+        int[] points = new int[len + 2];
+        points[0] = points[len + 1] = 1;
+        for (int i = 1; i <= len; i++) points[i] = nums[i - 1];
+        int[][] dp = new int[len + 2][len + 2];
+        for (int i = len; i >= 0; i--) {
+            for (int j = i + 1; j < len + 2; j++) {
+                for (int k = i + 1; k < j; k++) {
+                    dp[i][j] = Math.max(dp[i][j], dp[i][k] + dp[k][j] + points[i] * points[k] * points[j]); 
+                }
+            }
+        }
+        return dp[0][len + 1];
+    }
+}
+```
+
+## 最长公共子序列1143
+
+给定两个字符串 `text1` 和 `text2`，返回这两个字符串的最长公共子序列的长度。
+
+一个字符串的 子序列 是指这样一个新的字符串：它是由原字符串在不改变字符的相对顺序的情况下删除某些字符（也可以不删除任何字符）后组成的新字符串。
+例如，"ace" 是 "abcde" 的子序列，但 "aec" 不是 "abcde" 的子序列。两个字符串的「公共子序列」是这两个字符串所共同拥有的子序列。
+
+若这两个字符串没有公共子序列，则返回 0。
+
+**示例 1:**
+
+```
+输入：text1 = "abcde", text2 = "ace" 
+输出：3 
+解释：最长公共子序列是 "ace"，它的长度为 3。
+```
+
+**示例 2:**
+
+```
+输入：text1 = "abc", text2 = "abc"
+输出：3
+解释：最长公共子序列是 "abc"，它的长度为 3。
+```
+
+**示例 3:**
+
+```
+输入：text1 = "abc", text2 = "def"
+输出：0
+解释：两个字符串没有公共子序列，返回 0。
+```
+
+**提示:**
+
+```
+1 <= text1.length <= 1000
+1 <= text2.length <= 1000
+输入的字符串只含有小写英文字符。
+```
+
+**分析：**
+
+状态：i 和 j 分别表示扫描到的字符
+
+转移：当前字符是否在公共子序列中，如果`text1.charAt(i == text2.charAt(j)`则在，否则不在。
+
+`dp[i][j]`是`text1`的前 i 个字符和`text2`的前 j 个字符的最长公共子序列。
+
+如果`text1.charAt(i == text2.charAt(j)`则`dp[i][j] = dp[i - 1][j - 1]`。
+
+否则`dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1])`。
+
+![](E:/kejian/知识总结/img/47.png)
+
+**解法：**
+
+```java
+class Solution {
+    public int longestCommonSubsequence(String text1, String text2) {
+        int[][] dp = new int[text1.length() + 1][text2.length() + 1];
+        for (int i = 1; i < dp.length; i++) {
+            for (int j = 1; j < dp[i].length; j++) {
+                if (text1.charAt(i - 1) == text2.charAt(j - 1))
+                    dp[i][j] = dp[i - 1][j - 1] + 1;
+                else dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+            }
+        }
+        return dp[text1.length()][text2.length()];
+    }
+}
+```
+
+## 最长回文子序列516
+
+![](E:/kejian/知识总结/img/48.jpg)
+
+**分析：**
+
+状态：i 和 j 分别是字符串s 的两个下标，i 向前移动，j 向后移动。
+
+转移：字符 i 和字符 j 是否相等，如果相等，回文子序列长度+2，否则长度为加入 i 和加入 j 的最大值。
+
+`dp[i][j]`就是字符串在`[i, j]`的范围内的最长回文子串长度。
+
+![](E:/kejian/知识总结/img/49.jpg)
+
+![](E:/kejian/知识总结/img/50.jpg)
+
+**解法:**
+
+```java
+class Solution {
+    public int longestPalindromeSubseq(String s) {
+        int len = s.length();
+        int[][] dp = new int[len][len];
+        for (int i = 0; i < len; i++) dp[i][i] = 1;
+        for (int i = len - 1; i >= 0; i--) {
+            for (int j = i + 1; j < len; j++) {
+                if (s.charAt(i) == s.charAt(j)) 
+                    dp[i][j] = dp[i + 1][j - 1] + 2;
+                else 
+                    dp[i][j] = Math.max(dp[i + 1][j], dp[i][j - 1]);
+            }
+        }
+        return dp[0][len - 1];
+    }
+}
+```
+
+## 子序列小结
+
+求子序列时，`dp`数组可以是一维的（最长上升子序列300、最大子序和53）也可以是二维的（上面两道题），共同点是状态都是数组的下标。
+
+## 正则表达式匹配10
+
+![](E:/kejian/知识总结/img/51.png)
+
+**分析：**
+
+可以使用递归，每次判断一个字符。可以将每次递归的结果存起来。
+
+```java
+enum Result{
+    TRUE,
+    FAlSE;
+}
+
+class Solution {
+    Result[][] dp;
+    public boolean isMatch(String s, String p) {
+        dp =  new Result[s.length() + 1][p.length() + 1];
+        return recursion(0, 0, s, p);
+    }
+
+    private boolean recursion(int i, int j, String text, String pattern) {
+        if (dp[i][j] != null) return dp[i][j] == Result.TRUE;
+        boolean ans;
+        if (j == pattern.length()) ans = i == text.length();
+        else {
+            // 匹配当前的一个
+            boolean selfMatch = (i < text.length() && 
+                (text.charAt(i) == pattern.charAt(j) || 
+                pattern.charAt(j) == '.'));
+            if (j + 1 < pattern.length() && pattern.charAt(j + 1) == '*') {
+                // 匹配0个或者多个(在一次递归中是一个)
+                ans = recursion(i, j + 2, text, pattern) || selfMatch && recursion(i + 1, j, text, pattern);
+            } else {
+                ans = selfMatch && recursion(i + 1, j + 1, text, pattern);
+            }
+        }
+        dp[i][j] = ans ? Result.TRUE : Result.FAlSE;
+        return ans;
+    }
+}
+```
+
+转为非递归形式：
+
+```java
+class Solution {
+    public boolean isMatch(String s, String p) {
+        boolean[][] dp = new boolean[s.length() + 1][p.length() + 1];
+        dp[s.length()][p.length()] = true;
+        for (int i = s.length(); i >= 0; i--) {
+            for (int j = p.length() - 1; j >= 0; j--) {
+            // 匹配当前的一个
+            boolean selfMatch = (i < s.length() && 
+                (s.charAt(i) == p.charAt(j) || 
+                p.charAt(j) == '.'));
+                if (j + 1 < p.length() && p.charAt(j + 1) == '*') {
+                    // 匹配0个或者多个
+                    dp[i][j] = dp[i][j + 2] || selfMatch && dp[i + 1][j];
+                } else {
+                    dp[i][j] = selfMatch && dp[i + 1][j + 1];
+                }
+            }
+        }
+        return dp[0][0];
+    }
+}
+```
+
+## 无重叠区间435
+
+![](E:/kejian/知识总结/img/52.png)
+
+**解法：**
+
+这是一个活动安排问题，使用贪心法，每次找最早结束的活动。
+
+```java
+class Solution {
+    public int eraseOverlapIntervals(int[][] intervals) {
+        if (intervals.length == 0) return 0;
+        Arrays.sort(intervals, new Comparator<int[]>() {
+            public int compare(int[] a, int[] b) {
+                return a[1] - b[1];
+            }
+        });
+        int count = 0;
+        int end = Integer.MIN_VALUE;
+        for (int i = 0; i < intervals.length; i++) {
+            if (intervals[i][0] >= end) {
+                count++;
+                end = intervals[i][1];
+            }
+        }
+        
+        return intervals.length - count;
+    }
+}
+```
+
+## 用最少数量的箭引爆气球452
+
+![](E:/kejian/知识总结/img/53.png)
+
+**分析：**
+
+这个题也是在求无重叠区间的个数，但是区别在于这个题使用的是闭区间，也就是`[1, 2]`和`[2, 3]`是重叠的。
+
+![](E:/kejian/知识总结/img/54.jpg)
+
+**解法 ：**
+
+```java
+class Solution {
+    public int findMinArrowShots(int[][] points) {
+        if (points.length == 0) return 0;
+        Arrays.sort(points, new Comparator<int[]>() {
+            public int compare(int[] a, int[] b) {
+                return a[1] - b[1];
+            }
+        });
+        int count = 0;
+        long end = Long.MIN_VALUE;
+        for (int i = 0; i < points.length; i++) {
+            if (points[i][0] > end) {
+                count++;
+                end = points[i][1];
+            }
+        }
+        
+        return count;
+    }
+}
+```
+
+# 二分
+
+## 寻找一个数
+
+存在返回索引，不存在返回 -1。
+
+```java
+int binarySearch(int[] nums, int target) {
+    int left = 0; 
+    int right = nums.length - 1; // 注意
+
+    while(left <= right) {
+        int mid = left + (right - left) / 2;
+        if(nums[mid] == target)
+            return mid; 
+        else if (nums[mid] < target)
+            left = mid + 1; // 注意
+        else if (nums[mid] > target)
+            right = mid - 1; // 注意
+    }
+    return -1;
+}
+```
+
+要点：二分区间：所有下标；条件 `<=`；变换 `left = mid + 1`，`right = mid - 1`。
+
+## 寻找左侧边界
+
+返回有序数组中有目标值第一次出现的位置。
+
+```java
+int left_bound(int[] nums, int target) {
+    if (nums.length == 0) return -1;
+    int left = 0;
+    int right = nums.length; // 注意
+
+    while (left < right) { // 注意
+        int mid = (left + right) / 2;
+        if (nums[mid] == target) {
+            right = mid;
+        } else if (nums[mid] < target) {
+            left = mid + 1;
+        } else if (nums[mid] > target) {
+            right = mid; // 注意
+        }
+    }
+    return left;
+}
+```
+
+要点：二分区间：右侧边界多出一个；条件 `<`；变换 `left = mid + 1`，`right = mid`，找到 target 也是 `right = mid`。
+
+如果我们要返回 target 的下标只需要判断：
+
+- left + 1 是否越界
+- nums[left] == target ?
+- 以上两点都符合，返回 left，否则返回 0 。
+
+为什么是nums[left]而不是nums[left + 1]？
+
+- 因为当`nums[mid] == target`时区间有两种情况[mid, mid + 1)或[mid - 1, mid)，前者下一次循环执行`right = mid`后者下一次循环执行`left = mid + 1`，所有最终返回的都是mid。
+
+这些就是leetcode讲解中的后置处理。
+
+## 寻找右侧边界
+
+返回比 target 大的第一个数。
+
+```java
+int right_bound(int[] nums, int target) {
+    if (nums.length == 0) return -1;
+    int left = 0, right = nums.length;
+
+    while (left < right) {
+        int mid = (left + right) / 2;
+        if (nums[mid] == target) {
+            left = mid + 1; // 注意
+        } else if (nums[mid] < target) {
+            left = mid + 1;
+        } else if (nums[mid] > target) {
+            right = mid;
+        }
+    }
+    return left;
+}
+```
+
+要点：二分区间：右侧边界多出一个；条件 `<`；变换 `left = mid + 1`，`right = mid`，找到 target 也是 `left = mid + 1`。
+
+转化成找数后置处理：
+
+- left == 0 ？
+- nums[left - 1] == target ?
+- 以上都为真，返回nums[left - 1] ，否则返回 - 1。
 
