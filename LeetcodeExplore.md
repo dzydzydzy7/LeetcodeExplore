@@ -11835,3 +11835,246 @@ int right_bound(int[] nums, int target) {
 - nums[left - 1] == target ?
 - 以上都为真，返回nums[left - 1] ，否则返回 - 1。
 
+# 字典树
+
+## 实现Trie(前缀树)208
+
+实现一个 Trie (前缀树)，包含 insert, search, 和 startsWith 这三个操作。
+
+**示例:**
+
+```
+Trie trie = new Trie();
+
+trie.insert("apple");
+trie.search("apple");   // 返回 true
+trie.search("app");     // 返回 false
+trie.startsWith("app"); // 返回 true
+trie.insert("app");   
+trie.search("app");     // 返回 true
+```
+
+**说明:**
+
+- 你可以假设所有的输入都是由小写字母 a-z 构成的。
+- 保证所有输入均为非空字符串。
+
+**解法：**
+
+```java
+class Trie {
+    public Trie[] next;
+    public boolean isEnd;
+
+    public Trie() {
+        next = new Trie[26];
+        isEnd = false;
+    }
+    
+    public void insert(String word) {
+        Trie curPos = this;
+
+        for (int i = 0; i < word.length(); i++) {
+            int t = word.charAt(i) - 'a';
+            if (curPos.next[t] == null) {
+                curPos.next[t] = new Trie();
+            }
+            curPos = curPos.next[t];
+        }
+        curPos.isEnd = true;
+    }
+    
+    public boolean search(String word) {
+        Trie curPos = this;
+        for (int i = 0; i < word.length(); i++) {
+            int t = word.charAt(i) - 'a';
+            if (curPos.next[t] == null) { return false; }
+            curPos = curPos.next[t];
+        }
+        return curPos.isEnd;
+    }
+
+    public boolean startsWith(String prefix) {
+        Trie curPos = this;
+        for (int i = 0; i < prefix.length(); i++) {
+            int t = prefix.charAt(i) - 'a';
+            if (curPos.next[t] == null) { return false; }
+            curPos = curPos.next[t];
+        }
+        return true;
+    }
+}
+```
+
+## 单词的压缩编码820
+
+给定一个单词列表，我们将这个列表编码成一个索引字符串 S 与一个索引列表 A。
+
+例如，如果这个列表是 ["time", "me", "bell"]，我们就可以将其表示为 S = "time#bell#" 和 indexes = [0, 2, 5]。
+
+对于每一个索引，我们可以通过从字符串 S 中索引的位置开始读取字符串，直到 "#" 结束，来恢复我们之前的单词列表。
+
+那么成功对给定单词列表进行编码的最小字符串长度是多少呢？
+
+**示例：**
+
+```
+输入: words = ["time", "me", "bell"]
+输出: 10
+说明: S = "time#bell#" ， indexes = [0, 2, 5] 。
+```
+
+**提示：**
+
+- 1 <= words.length <= 2000
+- 1 <= words[i].length <= 7
+- 每个单词都是小写字母 。
+
+**解法：**
+
+使用**倒序的**字典树，在把字符插入到字典树时，计算每一个新单词的长度，有了 time， me就不是新单词，但 ume 任然是一个新单词。
+
+注意：插入字典树之前要对words按字符串长短排序，因为有了me，time仍然是新单词。
+
+```java
+class Tire {
+    public Tire[] next;
+    public boolean isEnd;
+
+    public Tire() {
+        next = new Tire[26];
+        isEnd = false;
+    }
+
+    public int insert(String s) {
+        Tire curPos = this;
+        boolean isNew = false;
+
+        for (int i = s.length() - 1; i >= 0; i--) {
+            int t = s.charAt(i) - 'a';
+            if (curPos.next[t] == null) {
+                curPos.next[t] = new Tire();
+                isNew = true;
+            }
+            curPos = curPos.next[t];
+        }
+        curPos.isEnd = true;
+        return isNew ? s.length() + 1 : 0;
+    }
+}
+
+class Solution {
+    public int minimumLengthEncoding(String[] words) {
+        Tire root = new Tire();
+        int res = 0;
+        Arrays.sort(words, (s1, s2) -> (s2.length() - s1.length()));
+        for (String w : words) {
+            res += root.insert(w);
+        }
+        return res;
+    }
+}
+```
+
+## 恢复空格 面试题17.13
+
+哦，不！你不小心把一个长篇文章中的空格、标点都删掉了，并且大写也弄成了小写。像句子"I reset the computer. It still didn’t boot!"已经变成了"iresetthecomputeritstilldidntboot"。在处理标点符号和大小写之前，你得先把它断成词语。当然了，你有一本厚厚的词典dictionary，不过，有些词没在词典里。假设文章用sentence表示，设计一个算法，把文章断开，要求未识别的字符最少，返回未识别的字符数。
+
+**注意：**本题相对原题稍作改动，只需返回未识别的字符数
+
+**示例：**
+
+```
+输入：
+dictionary = ["looked","just","like","her","brother"]
+sentence = "jesslookedjustliketimherbrother"
+输出： 7
+解释： 断句后为"jess looked just like tim her brother"，共7个未识别字符。
+```
+
+**提示：**
+
+- 0 <= len(sentence) <= 1000
+- dictionary中总字符数不超过 150000。
+- 你可以认为dictionary和sentence中只包含小写字母。
+
+**解法：**
+
+状态：dp[i] 是sentence 字符串的 [0, i) 范围内匹配不了的字符数
+
+转移：用 sentence 字符串的[j, i)子串和字典匹配，j 的范围是 [0, i)
+
+- 如果不匹配，增加了一个匹配不了的字符 `dp[i] = dp[i - 1]  + 1`。先考虑这种情况
+- 如果匹配，则考虑是否值得匹配`dp[i] = Math.max(dp[j], dp[i])`。
+
+```java
+class Solution {
+    public int respace(String[] dictionary, String sentence) {
+        Set<String> set = new HashSet(Arrays.asList(dictionary));
+        int n = sentence.length();
+        int[] dp = new int[n + 1];
+        for (int i = 1; i <= n; i++) {
+            dp[i] = dp[i - 1] + 1;
+            for (int j = 0; j < i; j++) {
+                if (set.contains(sentence.substring(j, i))) {
+                    dp[i] = Math.min(dp[i], dp[j]);
+                }
+            }
+        }
+        return dp[n];
+    }
+}
+```
+
+时间复杂度为O($n^2$) 832ms，可以使用字典树优化，优化后复杂度仍为O($n^2$) ，但执行时间缩短到16ms，原因是在内层循环中增加了中途退出循环的可能，这正是字典树的作用，这里的字典树是倒序的。
+
+```java
+class Tire {
+    public Tire[] next;
+    public boolean isEnd;
+
+    public Tire() {
+        next = new Tire[26];
+        isEnd = false;
+    }
+
+    public void insert(String s) {
+        Tire curPos = this;
+
+        for (int i = s.length() - 1; i >= 0; i--) {
+            int t = s.charAt(i) - 'a';
+            if (curPos.next[t] == null) {
+                curPos.next[t] = new Tire();
+            }
+            curPos = curPos.next[t];
+        }
+        curPos.isEnd = true;
+    }
+}
+
+class Solution {
+    public int respace(String[] dictionary, String sentence) {
+        Tire root = new Tire();
+        for (String s : dictionary) {
+            root.insert(s);
+        }
+        int n = sentence.length();
+        int[] dp = new int[n + 1];
+        for (int i = 1; i <= n; i++) {
+            dp[i] = dp[i - 1] + 1;
+            Tire curPos = root;
+            for (int j = i; j >= 1; j--) {
+                int t = sentence.charAt(j - 1) - 'a';
+                if (curPos.next[t] == null) break;  // 匹配不到
+                else if (curPos.next[t].isEnd)    // 匹配到
+                	// 注意这里是j-1, 匹配到的单词第一个字符在j，j-1表这个单词之前
+                    dp[i] = Math.min(dp[j - 1], dp[i]);
+                else if (dp[i] == 0) break;         // 完全匹配
+                curPos = curPos.next[t];
+            }
+        }
+        return dp[n];
+    }
+}
+```
+
