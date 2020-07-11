@@ -12339,3 +12339,284 @@ class Solution {
 }
 ```
 
+# 树状数组
+
+## 计算右侧小于当前元素的个数315
+
+给定一个整数数组 nums，按要求返回一个新数组 counts。数组 counts 有该性质： counts[i] 的值是  nums[i] 右侧小于 nums[i] 的元素的数量。
+
+**示例:**
+
+```
+输入: [5,2,6,1]
+输出: [2,1,1,0] 
+解释:
+5 的右侧有 2 个更小的元素 (2 和 1).
+2 的右侧仅有 1 个更小的元素 (1).
+6 的右侧有 1 个更小的元素 (1).
+1 的右侧有 0 个更小的元素.
+```
+
+**解法：**
+
+使用离散化的树状数组
+
+```java
+class Solution {
+    private int[] a;
+    private int[] c;
+
+    public List<Integer> countSmaller(int[] nums) {
+        List<Integer> res = new LinkedList<>();
+        discretization(nums);
+        this.c = new int[a.length];
+        for (int i = nums.length - 1; i >= 0; i--) {
+            int idx = getIndex(nums[i]);
+            res.add(getSum(idx - 1));
+            update(idx);
+        }
+        Collections.reverse(res);
+        return res;
+    }
+
+    private void discretization(int[] nums) {
+        Set<Integer> set = new HashSet<>();
+        for (int n : nums) set.add(n);
+        this.a = new int[set.size() + 1];
+        int index = 1;
+        for (Integer n : set) a[index++] = n.intValue();
+        Arrays.sort(a, 1, a.length);
+    }
+
+    private int getIndex(int num) {
+        return Arrays.binarySearch(a, 1, a.length, num);
+    }
+
+    private int lowBit(int x) {
+        return x & (-x);
+    }
+
+    private int getSum(int n) {
+        int res = 0;
+        while (n > 0) {
+            res += c[n];
+            n -= lowBit(n);
+        }
+        return res;
+    }
+
+    private void update(int idx) {
+        while (idx < c.length) {
+            c[idx]++;
+            idx += lowBit(idx);
+        }
+    }
+}
+```
+
+## 数组中的逆序对 剑指Offer51
+
+在数组中的两个数字，如果前面一个数字大于后面的数字，则这两个数字组成一个逆序对。输入一个数组，求出这个数组中的逆序对的总数。
+
+**示例 1:**
+
+```
+输入: [7,5,6,4]
+输出: 5
+```
+
+**限制：**
+
+- 0 <= 数组长度 <= 50000
+
+**解法：**
+
+本质上和上一题相同
+
+```java
+class Solution {
+    int c[];
+    int a[];
+
+    public int reversePairs(int[] nums) {
+        discretization(nums);
+        c = new int[a.length];
+        int res = 0;
+        for (int i = nums.length - 1; i >= 0; i--) {
+            int index = getIndex(nums[i]);
+            res += getSum(index - 1);
+            update(index);
+        }
+        return res;
+    }
+
+    private void discretization(int[] nums) {
+        Set<Integer> set = new HashSet<>();
+        for (int n : nums) set.add(n);
+        a = new int[set.size() + 1];
+        int index = 1;
+        for (int n : set) a[index++] = n;
+        Arrays.sort(a, 1, a.length);
+    }
+
+    private int lowBit(int x) {
+        return x & (-x);
+    }
+
+    private int getSum(int idx) {
+        int res = 0;
+        while (idx > 0) {
+            res += c[idx];
+            idx -= lowBit(idx);
+        }
+        return res;
+    }
+
+    private void update(int idx) {
+        while (idx < c.length) {
+            c[idx]++;
+            idx += lowBit(idx);
+        }
+    }
+
+    private int getIndex(int num) {
+        return Arrays.binarySearch(a, 1, a.length, num);
+    }
+}
+```
+
+## 最多K次交换相邻数位后得到的最小整数1505
+
+给你一个字符串 num 和一个整数 k 。其中，num 表示一个很大的整数，字符串中的每个字符依次对应整数上的各个 数位 。
+
+你可以交换这个整数相邻数位的数字 最多 k 次。
+
+请你返回你能得到的最小整数，并以字符串形式返回。
+
+**示例 1：**
+
+```
+输入：num = "4321", k = 4
+输出："1342"
+解释：4321 通过 4 次交换相邻数位得到最小整数的步骤如上图所示。
+```
+
+**示例 2：**
+
+```
+输入：num = "100", k = 1
+输出："010"
+解释：输出可以包含前导 0 ，但输入保证不会有前导 0 。
+```
+
+**示例 3：**
+
+```
+输入：num = "36789", k = 1000
+输出："36789"
+解释：不需要做任何交换。
+```
+
+**示例 4：**
+
+```
+输入：num = "22", k = 22
+输出："22"
+```
+
+**示例 5：**
+
+```
+输入：num = "9438957234785635408", k = 23
+输出："0345989723478563548"
+```
+
+**提示：**
+
+- 1 <= num.length <= 30000
+- num 只包含 数字 且不含有 前导 0 。
+- 1 <= k <= 10^9
+
+**解法：**
+
+使用贪心法，维护一个前缀字符串，每次都找到与开头的距离小于 k 的最小数字，放到前缀字符串的末尾，k 减去相应的距离，直到k为0。
+
+这个每次都放到第一个的过程中有一个问题：如果它前面的的字符已经在前缀中了，就应该减去相应的移动次数。而把第 i 个字符移到前缀串，就应该有 减去前 i - 1 个字符中移动到前缀中的个数，这是一个前缀和问题，可以使用树状数组。
+
+举例： “294984148179” 	11次交换
+
+| 找到的最小 | 前缀串 | 剩余步数                                   |
+| ---------- | ------ | ------------------------------------------ |
+| 1(下标6)   | ""     | 12 - 6 = 6                                 |
+| 4(下标2)   | "1"    | 6 - 2 = 4                                  |
+| 4(下标5)   | "14"   | 4 - (5-1) = 0(因为前面的4已经在前缀串中了) |
+| -          | "144"  |                                            |
+
+所以最后是144299848179
+
+```java
+class BIT {
+    int[] c;
+
+    BIT(int size){
+        this.c = new int[size];
+    }
+
+    private int lowBit(int x) {
+        return x & (-x);
+    }
+
+    public void update(int idx) {
+        while (idx < c.length) {
+            c[idx]++;
+            idx += lowBit(idx);
+        }
+    }
+
+    public int getSum(int idx) {
+        int res = 0;
+        while (idx > 0) {
+            res += c[idx];
+            idx -= lowBit(idx);
+        }
+        return res;
+    }
+}
+
+class Solution {
+    public String minInteger(String num, int k) {
+        int n = num.length();
+        StringBuilder prefix = new StringBuilder();
+        BIT bit = new BIT(n + 1);
+        Deque<Integer>[] stacks = new Deque[10];
+        for (int i = 0; i < 10; i++) stacks[i] = new LinkedList<Integer>();
+        for (int i = n - 1; i >= 0; i--) {
+            stacks[num.charAt(i) - '0'].push(i);
+        }
+        boolean[] used = new boolean[n];
+        for (int i = 0; i < n; i++) {
+            // 每一步的任务都是找到当前距离k内最小的，放到最前面
+            if (k == 0) break;
+            for (int j = 0; j < 10; j++) {
+                if (stacks[j].size() > 0) {
+                    int idx = stacks[j].peek();
+                    int step = idx - bit.getSum(idx);   // 和开头的距离
+                    if (step <= k) {
+                        prefix.append((char)('0' + j));
+                        k -= step;
+                        used[idx] = true;
+                        stacks[j].poll();
+                        bit.update(idx + 1);
+                        break;
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < n; i++) {
+            if (!used[i]) prefix.append(num.charAt(i));
+        }
+        return prefix.toString();
+    }
+}
+```
+
