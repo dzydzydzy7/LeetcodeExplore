@@ -11794,7 +11794,7 @@ int left_bound(int[] nums, int target) {
 
 如果我们要返回 target 的下标只需要判断：
 
-- left + 1 是否越界
+- left 是否越界
 - nums[left] == target ?
 - 以上两点都符合，返回 left，否则返回 0 。
 
@@ -12074,6 +12074,267 @@ class Solution {
             }
         }
         return dp[n];
+    }
+}
+```
+
+# 滑动窗口
+
+## 最小覆盖子串76
+
+给你一个字符串 S、一个字符串 T，请在字符串 S 里面找出：包含 T 所有字符的最小子串。
+
+**示例：**
+
+```
+输入: S = "ADOBECODEBANC", T = "ABC"
+输出: "BANC"
+```
+
+**说明：**
+
+- 如果 S 中不存这样的子串，则返回空字符串 ""。
+- 如果 S 中存在这样的子串，我们保证它是唯一的答案。
+
+**解法**
+
+```java
+class Solution {
+    public String minWindow(String s, String t) {
+        Map<Character, Integer> needs = new HashMap<>();
+        Map<Character, Integer> window = new HashMap<>();
+        for (int i = 0; i < t.length(); i++) {
+            needs.put(t.charAt(i), needs.getOrDefault(t.charAt(i), 0) + 1);
+        }
+        int left = 0, right = 0;    // [left, right)
+        int start = 0, minLen = Integer.MAX_VALUE;
+        int match = 0;
+        while (right < s.length()) {
+            char c1 = s.charAt(right);
+            if (needs.containsKey(c1)) {
+                window.put(c1, window.getOrDefault(c1, 0) + 1);
+                // 注意Integer对象不要直接 == 要使用intValue()或compare
+                if (window.get(c1).intValue() == needs.get(c1).intValue())
+                    match++;
+            }
+            right++;
+            while (match == needs.size()) {
+                if (right - left < minLen) {
+                    start = left;
+                    minLen = right - left;
+                }
+                char c2 = s.charAt(left);
+                if (needs.containsKey(c2)) {
+                    window.put(c2, window.get(c2) - 1);
+                    // 注意Integer对象不要直接 == 要使用intValue()或compare
+                    if (window.get(c2).intValue() < needs.get(c2).intValue()) 
+                        match--;
+                }
+                left++;
+            }
+        }
+        return (minLen == Integer.MAX_VALUE) ? 
+                "" : s.substring(start, start + minLen);
+    }
+}
+```
+
+## 字符串的排列 567
+
+给定两个字符串 s1 和 s2，写一个函数来判断 s2 是否包含 s1 的排列。
+
+换句话说，第一个字符串的排列之一是第二个字符串的子串。
+
+**示例1:**
+
+```
+输入: s1 = "ab" s2 = "eidbaooo"
+输出: True
+解释: s2 包含 s1 的排列之一 ("ba").
+```
+
+**示例2:**
+
+```
+输入: s1= "ab" s2 = "eidboaoo"
+输出: False
+```
+
+**注意：**
+
+- 输入的字符串只包含小写字母
+- 两个字符串的长度都在 [1, 10,000] 之间
+
+**解法：**
+
+```java
+class Solution {
+    public boolean checkInclusion(String s1, String s2) {
+        Map<Character, Integer> needs = new HashMap<>();
+        Map<Character, Integer> window = new HashMap<>();
+        for (int i = 0; i < s1.length(); i++)
+            needs.put(s1.charAt(i), needs.getOrDefault(s1.charAt(i), 0) + 1);
+        int left = 0, right = 0;
+        int match = 0;
+        while (right < s2.length()) {
+            char c1 = s2.charAt(right);
+            if (needs.containsKey(c1)) {
+                window.put(c1, window.getOrDefault(c1, 0) + 1);
+                if (window.get(c1).intValue() == needs.get(c1).intValue())
+                    match++;
+            }
+            right++;
+            while (match == needs.size()) {
+                if (right - left == s1.length()) {
+                    return true;
+                }
+                char c2 = s2.charAt(left);
+                if (needs.containsKey(c2)) {
+                    window.put(c2, window.get(c2) - 1);
+                    if (window.get(c2).intValue() < needs.get(c2).intValue())
+                        match--;
+                }
+                left++;
+            }
+        }
+        return false;
+    }
+}
+```
+
+## 找到字符串中所有字母易位词438
+
+给定一个字符串 s 和一个非空字符串 p，找到 s 中所有是 p 的字母异位词的子串，返回这些子串的起始索引。
+
+字符串只包含小写英文字母，并且字符串 s 和 p 的长度都不超过 20100。
+
+**说明：**
+
+- 字母异位词指字母相同，但排列不同的字符串。
+- 不考虑答案输出的顺序。
+
+**示例 1:**
+
+```
+输入:
+s: "cbaebabacd" p: "abc"
+
+输出:
+[0, 6]
+
+解释:
+起始索引等于 0 的子串是 "cba", 它是 "abc" 的字母异位词。
+起始索引等于 6 的子串是 "bac", 它是 "abc" 的字母异位词。
+```
+
+**示例 2:**
+
+```
+输入:
+s: "abab" p: "ab"
+
+输出:
+[0, 1, 2]
+
+解释:
+起始索引等于 0 的子串是 "ab", 它是 "ab" 的字母异位词。
+起始索引等于 1 的子串是 "ba", 它是 "ab" 的字母异位词。
+起始索引等于 2 的子串是 "ab", 它是 "ab" 的字母异位词。
+```
+
+**解法：**
+
+```java
+class Solution {
+    public List<Integer> findAnagrams(String s, String p) {
+        List<Integer> res = new LinkedList<>();
+        if (s.length() < p.length()) return res;
+        Map<Character, Integer> needs = new HashMap<>();
+        Map<Character, Integer> window = new HashMap<>();
+        for (int i = 0; i < p.length(); i++)
+            needs.put(p.charAt(i), needs.getOrDefault(p.charAt(i), 0) + 1);
+        int match = 0;
+        int left = 0, right = 0;
+        while (right < s.length()) {
+            char c1 = s.charAt(right);
+            if (needs.containsKey(c1)) {
+                window.put(c1, window.getOrDefault(c1, 0) + 1);
+                // Integer对象不要直接==，要用intValue或compare
+                if (window.get(c1).intValue() == needs.get(c1).intValue())
+                    match++;
+            }
+            right++;
+            while (match == needs.size()) {
+                if (right - left == p.length()) 
+                    res.add(left);
+                char c2 = s.charAt(left);
+                if (window.containsKey(c2)){
+                    window.put(c2, window.get(c2) - 1);
+                    // Integer对象不要直接==，要用intValue或compare
+                    if (window.get(c2).intValue() < needs.get(c2).intValue())
+                        match--;
+                }
+                left++;
+            }
+        }
+        return res;
+    }
+}
+```
+
+## 无重复字符的最长子串 3
+
+给定一个字符串，请你找出其中不含有重复字符的 最长子串 的长度。
+
+**示例 1:**
+
+```
+输入: "abcabcbb"
+输出: 3 
+解释: 因为无重复字符的最长子串是 "abc"，所以其长度为 3。
+```
+
+**示例 2:**
+
+```
+输入: "bbbbb"
+输出: 1
+解释: 因为无重复字符的最长子串是 "b"，所以其长度为 1。
+```
+
+**示例 3:**
+
+```
+输入: "pwwkew"
+输出: 3
+解释: 因为无重复字符的最长子串是 "wke"，所以其长度为 3。
+     请注意，你的答案必须是 子串 的长度，"pwke" 是一个子序列，不是子串。
+```
+
+**解法：**
+
+这个题目告诉我们：滑窗不一定拘于形式，不一定像以上三题一样，但原理是相同的
+
+```java
+class Solution {
+    public int lengthOfLongestSubstring(String s) {
+        Map<Character, Integer> map = new HashMap<>();
+        int res = 0;
+        int left = 0, right = 0;
+        while (right < s.length()) {
+            char c = s.charAt(right);
+            if (map.containsKey(c)) {
+                res = Math.max(res, map.size());
+                int idx = map.get(c);
+                while (left <= idx) {
+                    map.remove(s.charAt(left));
+                    left++;
+                }
+            }
+            map.put(c, right);
+            right++;
+        }
+        return Math.max(s.length() - left, res);
     }
 }
 ```
