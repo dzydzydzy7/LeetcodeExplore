@@ -2,7 +2,7 @@
 
 LeetCode刷题笔记，所有题目均使用java语言实现。
 
-LeetcodeExplore.md和[explore](https://leetcode-cn.com/explore/)中的卡片对应。现已完成所有探索中的数据结构类卡片，后又添加了动态规划专题。
+LeetcodeExplore.md和[explore](https://leetcode-cn.com/explore/)中的卡片对应。现已完成所有探索中的数据结构类卡片，后又添加了动态规划，字典树，滑动窗口，树状数组专题。
 
 LeetcodeDB对应Leetcode中的[数据库](https://leetcode-cn.com/problemset/database/)题目。
 
