@@ -10,5 +10,5 @@ LeetcodeDB对应Leetcode中的[数据库](https://leetcode-cn.com/problemset/dat
 
 使用markdown的形式记录，其中包含图片，clone下来用typora观看会体验更好。
 
-将会持续更新。。。
+每天都会更新。。。
 
