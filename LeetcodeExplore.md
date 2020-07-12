@@ -12620,3 +12620,339 @@ class Solution {
 }
 ```
 
+# 回溯
+
+## 子集78
+
+给定一组不含重复元素的整数数组 nums，返回该数组所有可能的子集（幂集）。
+
+**说明：**解集不能包含重复的子集。
+
+**示例:**
+
+```
+输入: nums = [1,2,3]
+输出:
+[
+  [3],
+  [1],
+  [2],
+  [1,2,3],
+  [1,3],
+  [2,3],
+  [1,2],
+  []
+]
+```
+
+**解法：**
+
+```java
+class Solution {
+    LinkedList<List<Integer>> res = new LinkedList<>();
+
+    public List<List<Integer>> subsets(int[] nums) {
+        LinkedList<Integer> track = new LinkedList<>();
+        backTrack(nums, 0, track);
+        return res;
+    }
+
+    private void backTrack(int[] nums, int start, LinkedList<Integer> track) {
+        res.push(new LinkedList(track));
+        for (int i = start; i < nums.length; i++) {
+            track.push(nums[i]);
+            backTrack(nums, i + 1, track);
+            track.pop();
+        }
+    }
+}
+```
+
+## 全排列46
+
+给定一个 没有重复 数字的序列，返回其所有可能的全排列。
+
+**示例:**
+
+```
+输入: [1,2,3]
+输出:
+[
+  [1,2,3],
+  [1,3,2],
+  [2,1,3],
+  [2,3,1],
+  [3,1,2],
+  [3,2,1]
+]
+```
+
+**解法：**
+
+```java
+class Solution {
+    List<List<Integer>> res = new LinkedList<>();
+    public List<List<Integer>> permute(int[] nums) {
+        LinkedList<Integer> track = new LinkedList<>();
+        backTrack(nums, track);
+        return res;
+    }
+
+    private void backTrack(int[] nums, LinkedList<Integer> track) {
+        if (track.size() == nums.length) {
+            res.add(new LinkedList(track));
+            return;
+        }
+        for (int n : nums) {
+            if (track.contains(n)) continue;
+            track.add(n);
+            backTrack(nums, track);
+            track.removeLast();
+        }
+    }
+}
+```
+
+## 组合77
+
+给定两个整数 n 和 k，返回 1 ... n 中所有可能的 k 个数的组合。
+
+**示例:**
+
+```
+输入: n = 4, k = 2
+输出:
+[
+  [2,4],
+  [3,4],
+  [2,3],
+  [1,2],
+  [1,3],
+  [1,4],
+]
+```
+
+**解法：**
+
+```java
+class Solution {
+    List<List<Integer>> res = new LinkedList<>();
+
+    public List<List<Integer>> combine(int n, int k) {
+        if (n == 0 || k == 0) return res;
+        LinkedList<Integer> track = new LinkedList<>();
+        backTrack(n, k, 1, track);
+        return res;
+    }
+
+    private void backTrack(int n,int k,int start,LinkedList<Integer> track){
+        if (track.size() == k) {
+            res.add(new LinkedList(track));
+            return;
+        }
+        for (int i = start; i <= n; i++) {
+            track.push(i);
+            backTrack(n, k, i + 1, track);
+            track.pop();
+        }
+    }
+}
+```
+
+## N皇后51
+
+n 皇后问题研究的是如何将 n 个皇后放置在 n×n 的棋盘上，并且使皇后彼此之间不能相互攻击。
+
+![](E:/kejian/知识总结/leetcode/img/60.png)
+
+上图为 8 皇后问题的一种解法。
+
+给定一个整数 n，返回所有不同的 n 皇后问题的解决方案。
+
+每一种解法包含一个明确的 n 皇后问题的棋子放置方案，该方案中 'Q' 和 '.' 分别代表了皇后和空位。
+
+**示例:**
+
+```
+输入: 4
+输出: [
+ [".Q..",  // 解法 1
+  "...Q",
+  "Q...",
+  "..Q."],
+
+ ["..Q.",  // 解法 2
+  "Q...",
+  "...Q",
+  ".Q.."]
+]
+解释: 4 皇后问题存在两个不同的解法。
+```
+
+
+**提示：**
+
+- 皇后，是国际象棋中的棋子，意味着国王的妻子。皇后只做一件事，那就是“吃子”。当她遇见可以吃的棋子时，就迅速冲上去吃掉棋子。当然，她横、竖、斜都可走一到七步，可进可退。（引用自 百度百科 - 皇后 ）
+
+**解法：**
+
+```java
+class Solution {
+    List<List<String>> res = new ArrayList<>();
+    int n;
+
+    public List<List<String>> solveNQueens(int n) {
+        String[] track = new String[n];
+        for (int i = 0; i < n; i++) {
+            StringBuilder sb = new StringBuilder();
+            for (int j = 0; j < n; j++) sb.append('.');
+            track[i] = sb.toString();
+        }
+        this.n = n;
+        backTrack(track, 0);
+        return res;
+    }
+
+    private void backTrack(String[] track, int row) {
+        if (row == n) {
+            List<String> list = new ArrayList<>();
+            for (int i = 0; i < n; i++) {
+                list.add(track[i]);
+            }
+            res.add(list);
+            return;
+        }
+        for (int col = 0; col < n; col++) {
+            if (!isVaild(track, row, col)) continue;
+            StringBuilder sb = new StringBuilder(track[row]);
+            sb.setCharAt(col, 'Q');
+            track[row] = sb.toString();
+            backTrack(track, row + 1);
+            sb.setCharAt(col, '.');
+            track[row] = sb.toString();
+        }
+    }
+
+    private boolean isVaild(String[] track, int row, int col) {
+        for (int i = 0; i < n; i++) {
+            if (track[i].charAt(col) == 'Q') return false;
+        }
+        for (int i = row - 1, j = col + 1; i >= 0 && j < n; i--, j++) {
+            if (track[i].charAt(j) == 'Q') return false;
+        }
+        for (int i = row - 1, j = col - 1; i >= 0 && j >= 0; i--, j--) {
+            if (track[i].charAt(j) == 'Q') return false;
+        }
+        return true;
+    }
+}
+```
+
+## 括号生成22
+
+数字 n 代表生成括号的对数，请你设计一个函数，用于能够生成所有可能的并且 有效的 括号组合。
+
+**示例：**
+
+```
+输入：n = 3
+输出：[
+       "((()))",
+       "(()())",
+       "(())()",
+       "()(())",
+       "()()()"
+     ]
+```
+
+**解法：**
+
+```java
+class Solution {
+    List<String> res = new LinkedList<>();
+
+    public List<String> generateParenthesis(int n) {
+        String str = "";
+        backTrace(n, n, str);
+        return res;
+    }
+
+    // left means how many left parentheses remain
+    private void backTrace(int left, int right, String str) {
+        if (right < left) return;
+        if (left < 0 || right < 0) return;
+        if (left == 0 && right == 0) {
+            res.add(str);
+            return;
+        }
+        // try left
+        str = str + "(";
+        backTrace(left - 1, right, str);
+        str = str.substring(0, str.length() - 1);
+        // try right
+        str = str + ")";
+        backTrace(left, right - 1, str);
+        str = str.substring(0, str.length() - 1);
+    }
+}
+```
+
+## 解数独37
+
+编写一个程序，通过已填充的空格来解决数独问题。
+
+一个数独的解法需遵循如下规则：
+
+- 数字 1-9 在每一行只能出现一次。
+- 数字 1-9 在每一列只能出现一次。
+- 数字 1-9 在每一个以粗实线分隔的 3x3 宫内只能出现一次。
+
+空白格用 '.' 表示。
+
+![](E:/kejian/知识总结/leetcode/img/61.png)
+
+一个数独。
+
+![](E:/kejian/知识总结/leetcode/img/62.png)
+
+答案被标成红色。
+
+**说明:**
+
+- 给定的数独序列只包含数字 1-9 和字符 '.' 。
+- 你可以假设给定的数独只有唯一解。
+- 给定数独永远是 9x9 形式的。
+
+**解法：**
+
+```java
+class Solution {
+    public void solveSudoku(char[][] board) {
+        backTrack(board, 0, 0);
+    }
+
+    private boolean backTrack(char[][] board, int i, int j) {
+        if (i == 9) return true;
+        if (j == 9) return backTrack(board, i + 1, 0);
+        if (board[i][j] != '.') return backTrack(board, i, j + 1);
+        
+        for (char ch = '1'; ch <= '9'; ch++){
+            if (!isVaild(board, i, j, ch)) continue;
+            board[i][j] = ch;
+            if (backTrack(board, i, j + 1)) return true;
+            board[i][j] = '.';
+        }
+        return false;
+    }
+
+    private boolean isVaild(char[][] board, int i, int j, char ch) {
+        for (int idx = 0; idx < 9; idx++) {
+            if (board[i][idx] == ch) return false;
+            if (board[idx][j] == ch) return false;
+            if (board[(i/3)*3 + idx/3][(j/3)*3 + idx%3] == ch) return false;
+        }
+        return true;
+    }
+}
+```
+
