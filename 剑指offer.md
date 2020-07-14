@@ -978,3 +978,210 @@ class Solution {
 但实际上，n可能会大于10甚至更大，所以用字符串解决才是正确的方法，用字符串模拟加一
 
 更好的方法是把它看作是一个全排列问题，每一位都可以是 0 ~ 9 中的任意数字，排列 n 位，用回溯法，最前面的0不输出。
+
+## 18 删除链表的结点
+
+给定单向链表的头指针和一个要删除的节点的值，定义一个函数删除该节点。
+
+返回删除后的链表的头节点。
+
+**注意：**此题对比原题有改动
+
+**示例 1:**
+
+```
+输入: head = [4,5,1,9], val = 5
+输出: [4,1,9]
+解释: 给定你链表中值为 5 的第二个节点，那么在调用了你的函数之后，该链表应变为 4 -> 1 -> 9.
+```
+
+**示例 2:**
+
+```
+输入: head = [4,5,1,9], val = 1
+输出: [4,5,9]
+解释: 给定你链表中值为 1 的第三个节点，那么在调用了你的函数之后，该链表应变为 4 -> 5 -> 9.
+```
+
+**说明：**
+
+- 题目保证链表中节点的值互不相同
+- 若使用 C 或 C++ 语言，你不需要 free 或 delete 被删除的节点
+
+**解法：**
+
+```java
+class Solution {
+    public ListNode deleteNode(ListNode head, int val) {
+        if (head.val == val) return head.next;
+        ListNode node = head;
+        while (node.next.val != val) node = node.next;
+        node.next = node.next.next;
+        return head;
+    }
+}
+```
+
+书上的题目的第二个参数是要删除的结点的引用。所以可以分为三种情况：
+
+- 只有一个结点。即head就是被删除的结点，返回null
+- 删除的是末尾结点，按照上面的代码删除
+- 其他情况可以把`要删除的结点`的`下一个结点的值`复制到`要删除的结点`，再删除下一个结点。O(1)
+
+## 19 正则表达式匹配
+
+请实现一个函数用来匹配包含'. '和'*'的正则表达式。模式中的字符'.'表示任意一个字符，而'*'表示它前面的字符可以出现任意次（含0次）。在本题中，匹配是指字符串的所有字符匹配整个模式。例如，字符串"aaa"与模式"a.a"和"ab*ac*a"匹配，但与"aa.a"和"ab*a"均不匹配。
+
+**示例 1:**
+
+```
+输入:
+s = "aa"
+p = "a"
+输出: false
+解释: "a" 无法匹配 "aa" 整个字符串。
+```
+
+**示例 5:**
+
+```
+输入:
+s = "mississippi"
+p = "mis*is*p*."
+输出: false
+```
+
+**说明：**
+
+- s 可能为空，且只包含从 a-z 的小写字母。
+- p 可能为空，且只包含从 a-z 的小写字母以及字符 `.` 和` *`，无连续的 `*`。
+
+**解法：**
+
+```java
+class Solution {
+    String s;
+    String p;
+
+    public boolean isMatch(String s, String p) {
+        this.s = s;
+        this.p = p;
+        return match(0, 0);
+    }
+
+    public boolean match(int i, int j) {
+        if (j == p.length()) return i == s.length();
+        // 判断自身是否匹配
+        boolean selfMatch = (i < s.length() && (p.charAt(j) == '.' || s.charAt(i) == p.charAt(j)));
+        // 有*时的匹配
+        if (j + 1 < p.length() && p.charAt(j + 1) == '*') {
+            return (selfMatch && match(i + 1, j)) || match(i, j + 2);
+        }
+        // 普通匹配
+        return selfMatch && match(i + 1, j + 1);
+    }
+}
+```
+
+可以记忆化递归，可以改为dp
+
+## 20 表示数值的字符串
+
+请实现一个函数用来判断字符串是否表示数值（包括整数和小数）。例如，字符串"+100"、"5e2"、"-123"、"3.1416"、"0123"都表示数值，但"12e"、"1a3.14"、"1.2.3"、"+-5"、"-1E-16"及"12e+5.4"都不是。
+
+**解法：**
+
+使用DFA，图和代码不对应，图是题解中画的很好的一个DFA，2、3、7、8是终态。
+
+![](img/64.png)
+
+```java
+class Solution {
+    public boolean isNumber(String s) {
+        s = s.trim();
+        if (s.length() == 0) return false;
+        if (s.charAt(0) == '+' || s.charAt(0) == '-')
+            s = s.substring(1);
+        DFA dfa = new DFA();
+        for (int i = 0; i < s.length(); i++) {
+            dfa.trans(s.charAt(i));
+        }
+        return dfa.accept();
+    }
+}
+
+class DFA {
+    int state = 0;
+
+    void trans(char c) {
+        if (state == 0) {
+            if (c >= '0' && c <= '9') state = 2;
+            else if (c == '.') state = 3;
+            else state = -1;
+        }  else if (state == 2) {
+            if (c >= '0' && c <= '9') state = 2;
+            else if (c == '.') state = 4;
+            else if (c == 'e' || c == 'E') state = 5;
+            else state = -1;
+        } else if (state == 3 && c >= '0' && c <= '9') {
+            state = 4;
+        } else if (state == 4) {
+            if (c >= '0' && c <= '9') state = 4;
+            else if (c == 'e' || c == 'E') state = 5;
+            else state = -1;
+        } else if (state == 5) {
+            if (c >= '0' && c <= '9') state = 6;
+            else if (c == '+' || c == '-') state = 1;
+            else state = -1;
+        } else if (state == 1 && c >= '0' && c <= '9') {
+            state = 6;
+        } else if (state == 6 && c >= '0' && c <= '9') {
+            state = 6;
+        } else state = -1;
+    }
+
+    boolean accept() {
+        return state == 2 || state == 4 || state == 6;
+    }
+}
+```
+
+## 21 调整数组顺序使奇数位于偶数前面
+
+输入一个整数数组，实现一个函数来调整该数组中数字的顺序，使得所有奇数位于数组的前半部分，所有偶数位于数组的后半部分。
+
+**示例：**
+
+```
+输入：nums = [1,2,3,4]
+输出：[1,3,2,4] 
+注：[3,1,2,4] 也是正确的答案之一。
+```
+
+**提示：**
+
+- 1 <= nums.length <= 50000
+- 1 <= nums[i] <= 10000
+
+**解法：**
+
+双指针技巧
+
+```java
+class Solution {
+    public int[] exchange(int[] nums) {
+        int left = 0, right = nums.length - 1;
+        while (left < right) {
+            while (nums[left] % 2 == 1 && left < right) left++;
+            while (nums[right] % 2 == 0 && left < right) right--;
+            if (left < right) {
+                int tmp = nums[left];
+                nums[left] = nums[right];
+                nums[right] = tmp;
+            }
+        }
+        return nums;
+    }
+}
+```
+
