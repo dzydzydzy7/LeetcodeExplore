@@ -860,3 +860,121 @@ public static int bitCount(int i) {
 }
 ```
 
+## 16 数值的整数次方
+
+实现函数double Power(double base, int exponent)，求base的exponent次方。不得使用库函数，同时不需要考虑大数问题。
+
+**示例 1:**
+
+```
+输入: 2.00000, 10
+输出: 1024.00000
+```
+
+**示例 2:**
+
+```
+输入: 2.10000, 3
+输出: 9.26100
+```
+
+**示例 3:**
+
+```
+输入: 2.00000, -2
+输出: 0.25000
+解释: 2-2 = 1/22 = 1/4 = 0.25
+```
+
+
+说明:
+
+- -100.0 < x < 100.0
+- n 是 32 位有符号整数，其数值范围是 [−231, 231 − 1] 。
+
+**解法**
+
+在书中，次方数是非负数，而本题中不是，所以不能使用位运算
+
+当 n 为奇数时 $a^n = a^{n/2} * a^{n/2} * a$，
+
+当 n 为偶数时 $a^n = a^{n/2} * a^{n/2}$
+
+```java
+class Solution {
+    public double myPow(double x, int n) {
+        if (n == 0) return 1;
+        if (n == 1) return x;
+        if (n == -1) return 1 / x;
+        double a = myPow(x, n / 2);
+        double mod = myPow(x, n % 2);
+        return a * a * mod;
+    }
+}
+```
+
+快速幂的迭代做法：
+
+```java
+class Solution {
+    double quickMul(double x, long N) {
+        double ans = 1.0;
+        // 贡献的初始值为 x
+        double x_contribute = x;
+        // 在对 N 进行二进制拆分的同时计算答案
+        while (N > 0) {
+            if (N % 2 == 1) {
+                // 如果 N 二进制表示的最低位为 1，那么需要计入贡献
+                ans *= x_contribute;
+            }
+            // 将贡献不断地平方
+            x_contribute *= x_contribute;
+            // 舍弃 N 二进制表示的最低位，这样我们每次只要判断最低位即可
+            N /= 2;
+        }
+        return ans;
+    }
+
+    public double myPow(double x, int n) {
+        long N = n;
+        return N >= 0 ? quickMul(x, N) : 1.0 / quickMul(x, -N);
+    }
+}
+```
+
+## 17 打印从1到最大的n位数
+
+输入数字 n，按顺序打印出从 1 到最大的 n 位十进制数。比如输入 3，则打印出 1、2、3 一直到最大的 3 位数 999。
+
+**示例 1:**
+
+```
+输入: n = 1
+输出: [1,2,3,4,5,6,7,8,9]
+```
+
+**说明：**
+
+- 用返回一个整数列表来代替打印
+- n 为正整数
+
+**解法：**
+
+因为题目中返回的是int数组，所以n肯定不会大于10
+
+```java
+class Solution {
+    public int[] printNumbers(int n) {
+        int rightRange = (int)Math.pow(10, n);
+        int[] res = new int[rightRange - 1];
+        for (int i = 1; i < rightRange; i++) {
+            res[i - 1] = i;
+        }
+        return res;
+    }
+}
+```
+
+但实际上，n可能会大于10甚至更大，所以用字符串解决才是正确的方法，用字符串模拟加一
+
+更好的方法是把它看作是一个全排列问题，每一位都可以是 0 ~ 9 中的任意数字，排列 n 位，用回溯法，最前面的0不输出。
