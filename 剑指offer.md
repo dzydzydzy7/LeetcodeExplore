@@ -1185,3 +1185,258 @@ class Solution {
 }
 ```
 
+## 22 链表中倒数第k个结点
+
+输入一个链表，输出该链表中倒数第k个节点。为了符合大多数人的习惯，本题从1开始计数，即链表的尾节点是倒数第1个节点。例如，一个链表有6个节点，从头节点开始，它们的值依次是1、2、3、4、5、6。这个链表的倒数第3个节点是值为4的节点。
+
+**示例：**
+
+```
+给定一个链表: 1->2->3->4->5, 和 k = 2.
+
+返回链表 4->5.
+```
+
+**解法：**
+
+让快指针先走k - 1步，快指针到达尾节点时，满指针即为所求。
+
+注意鲁棒性，k < 1，head == null，链表少于 k 个结点
+
+```java
+class Solution {
+    public ListNode getKthFromEnd(ListNode head, int k) {
+        if (k < 1) return head;
+        if (head == null) return head;
+        ListNode fast = head, slow = head;
+        for (int i = 1; i < k; i ++) {
+            if (fast.next != null) fast = fast.next;
+            else return head; 
+        }
+        while (fast.next != null) {
+            fast = fast.next;
+            slow = slow.next;
+        }
+        return slow;
+    }
+}
+```
+
+## 23 链表中环的入口结点
+
+由于leetcode的剑指offer部分没有这道题，我们使用leetcode142环形链表II代替。
+
+**解法：**
+
+```java
+public class Solution {
+    private ListNode getIntersection(ListNode head) {
+        ListNode fast = head;
+        ListNode slow = head;
+        while (fast != null && fast.next != null) {
+            fast = fast.next.next;
+            slow = slow.next;
+            if (fast == slow) return slow;
+        }
+        return null;
+    }
+
+    public ListNode detectCycle(ListNode head) {
+        if (head == null) return null;
+        ListNode intersect = getIntersection(head);
+        if (intersect == null) return null;
+        while (head != intersect) {
+            head = head.next;
+            intersect = intersect.next;
+        }
+        return intersect;
+    }
+}
+```
+
+## 24 反转链表
+
+定义一个函数，输入一个链表的头节点，反转该链表并输出反转后链表的头节点。
+
+**示例:**
+
+```
+输入: 1->2->3->4->5->NULL
+输出: 5->4->3->2->1->NULL
+```
+
+**限制：**
+
+- 0 <= 节点个数 <= 5000
+
+
+**解法：**
+
+递归
+
+```java
+class Solution {
+    public ListNode reverseList(ListNode head) {
+        if (head == null || head.next == null) return head;
+        ListNode newHead = reverseList(head.next);
+        head.next.next = head;
+        head.next = null;
+        return newHead;
+    }
+}
+```
+
+迭代
+
+```java
+class Solution {
+    public ListNode reverseList(ListNode head) {
+        ListNode pre = null;    // 当前结点的前一个
+        ListNode cur = head;    // 当前结点
+        while(cur != null) {
+            ListNode tmp = cur.next;
+            cur.next = pre;
+            pre = cur;  // 顺序
+            cur = tmp;  // 不能错
+        }
+        return pre;
+    }
+}
+```
+
+## 25 合并两个排序的链表
+
+输入两个递增排序的链表，合并这两个链表并使新链表中的节点仍然是递增排序的。
+
+**示例1：**
+
+```
+输入：1->2->4, 1->3->4
+输出：1->1->2->3->4->4
+```
+
+**限制：**
+
+- 0 <= 链表长度 <= 1000
+
+
+**解法：**
+
+使用递归看起来更简洁
+
+```java
+class Solution {
+    public ListNode mergeTwoLists(ListNode l1, ListNode l2) {
+        if (l1 == null) return l2;
+        if (l2 == null) return l1;
+        ListNode newHead;
+        if (l1.val <= l2.val) {
+            newHead = l1;
+            newHead.next = mergeTwoLists(l1.next, l2);
+        } else {
+            newHead = l2;
+            newHead.next = mergeTwoLists(l1, l2.next);
+        }
+        return newHead;
+    }
+}
+```
+
+## 26 树的子结构
+
+输入两棵二叉树A和B，判断B是不是A的子结构。(约定空树不是任意一个树的子结构)
+
+B是A的子结构， 即 A中有出现和B相同的结构和节点值。
+
+**例如:**
+
+```
+给定的树 A:
+ 	 3
+ 	/ \
+   4   5
+  / \
+ 1   2
+ 
+给定的树 B：
+   4 
+  /
+ 1
+返回 true，因为 B 与 A 的一个子树拥有相同的结构和节点值。
+```
+
+**解法：**
+
+```java
+class Solution {
+    public boolean isSubStructure(TreeNode A, TreeNode B) {
+        if (A == null || B == null) return false;
+        boolean res = false;
+        if (A.val == B.val) res = doesTreeAHasTreeB(A, B);
+        if (res == false) res = isSubStructure(A.left, B);
+        if (res == false) res = isSubStructure(A.right, B);
+        return res;
+    }
+
+    public boolean doesTreeAHasTreeB(TreeNode A, TreeNode B) {
+        if (B == null || A == null) return false;
+        boolean match = (B.val == A.val);
+        if (B.left == null && B.right == null) return match;
+        if (B.left != null) match &= doesTreeAHasTreeB(A.left, B.left);
+        if (B.right!=null) match &= doesTreeAHasTreeB(A.right, B.right);
+        return match;
+    }
+}
+```
+
+## 27 二叉树的镜像
+
+请完成一个函数，输入一个二叉树，该函数输出它的镜像。例如
+
+```
+输入：
+	 4
+   /   \
+  2     7
+ / \   / \
+1   3 6   9
+镜像输出：
+     4
+   /   \
+  7     2
+ / \   / \
+9   6 3   1
+```
+
+**示例 1：**
+
+```
+输入：root = [4,2,7,1,3,6,9]
+输出：[4,7,2,9,6,3,1]
+```
+
+**限制：**
+
+- 0 <= 节点个数 <= 1000
+
+
+**解法：**
+
+```java
+class Solution {
+    public TreeNode mirrorTree(TreeNode root) {
+        recursion(root);
+        return root;    
+    }
+
+    private void recursion(TreeNode root) {
+        if (root == null) return;
+        TreeNode tmp = root.left;
+        root.left = root.right;
+        root.right = tmp;
+        recursion(root.left);
+        recursion(root.right);
+    }
+}
+```
+
