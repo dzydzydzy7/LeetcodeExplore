@@ -1440,3 +1440,105 @@ class Solution {
 }
 ```
 
+## 28 对称的二叉树
+
+请实现一个函数，用来判断一棵二叉树是不是对称的。如果一棵二叉树和它的镜像一样，那么它是对称的。
+
+```
+例如，二叉树 [1,2,2,3,4,4,3] 是对称的。
+
+	1
+   / \
+  2   2
+ / \ / \
+3  4 4  3
+但是下面这个 [1,2,2,null,3,null,3] 则不是镜像对称的:
+
+	1
+   / \
+  2   2
+   \   \
+   3    3
+```
+
+**解法：**
+
+对称的二叉树先左后右的前序和先右后左的前序相同
+
+```java
+class Solution {
+    public boolean isSymmetric(TreeNode root) {
+        return recursion(root, root);
+    }
+
+    private boolean recursion(TreeNode n1, TreeNode n2) {
+        if (n1 == null && n2 == null) return true;
+        if (n1 == null || n2 == null) return false;
+        if (n1.val != n2.val) return false;
+        return recursion(n1.left, n2.right) && recursion(n1.right, n2.left);
+    }
+}
+```
+
+## 29 顺时针打印矩阵
+
+输入一个矩阵，按照从外向里以顺时针的顺序依次打印出每一个数字。
+
+**示例 1：**
+
+```
+输入：matrix = [[1,2,3],[4,5,6],[7,8,9]]
+输出：[1,2,3,6,9,8,7,4,5]
+```
+
+**示例 2：**
+
+```
+输入：matrix = [[1,2,3,4],[5,6,7,8],[9,10,11,12]]
+输出：[1,2,3,4,8,12,11,10,9,5,6,7]
+```
+
+**限制：**
+
+- 0 <= matrix.length <= 100
+- 0 <= matrix[i].length <= 100
+
+**解法：**
+
+```java
+class Solution {
+    int[] res;
+    int idx;
+
+    public int[] spiralOrder(int[][] matrix) {
+        if (matrix.length == 0 || matrix[0].length == 0)
+            return new int[0];
+        res = new int[matrix.length * matrix[0].length];
+        idx = 0;
+        int start = 0;
+        // 一圈一圈向里输出，每次输出一圈
+        while (start * 2 < matrix.length && start * 2 < matrix[0].length) {
+            printCircle(matrix, start); // 输出一圈
+            start++;
+        }
+        return res;
+    }
+
+    private void printCircle(int[][] matrix, int start) {
+        int endX = matrix[0].length - start - 1;
+        int endY = matrix.length - start - 1;
+        for (int i = start; i <= endX; i++)
+            res[idx++] = matrix[start][i];
+        if (start < endY)   // 多于一行时向下
+            for (int i = start + 1; i <= endY; i++)
+                res[idx++] = matrix[i][endX];
+        if (start < endX && start < endY)  // 多于一行且多于一列向左      
+            for (int i = endX - 1; i >= start; i--)
+                res[idx++] = matrix[endY][i];
+        if (start < endX && start < endY - 1)   // 多于两行且多于一列向上
+            for (int i = endY - 1; i > start; i--)
+                res[idx++] = matrix[i][start];
+    }
+}
+```
+
