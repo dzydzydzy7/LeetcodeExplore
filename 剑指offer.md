@@ -1542,3 +1542,422 @@ class Solution {
 }
 ```
 
+## 30 包含min函数的栈
+
+定义栈的数据结构，请在该类型中实现一个能够得到栈的最小元素的 min 函数在该栈中，调用 min、push 及 pop 的时间复杂度都是 O(1)。
+
+**示例:**
+
+```
+MinStack minStack = new MinStack();
+minStack.push(-2);
+minStack.push(0);
+minStack.push(-3);
+minStack.min();   --> 返回 -3.
+minStack.pop();
+minStack.top();      --> 返回 0.
+minStack.min();   --> 返回 -2.
+```
+
+**提示：**
+
+- 各函数的调用总次数不超过 20000 次
+
+
+**解法：**
+
+使用一个辅助栈记录每个状态的最小值
+
+```java
+class MinStack {
+
+    Deque<Integer> stack;
+    Deque<Integer> minStack;    // 保存栈每一个状态的最小值
+
+    public MinStack() {
+        stack = new LinkedList<>();
+        minStack = new LinkedList<>();
+    }
+    
+    public void push(int x) {
+        stack.push(x);
+        if (!minStack.isEmpty() && x > minStack.peek()) 
+            minStack.push(minStack.peek());
+        else minStack.push(x);
+    }
+    
+    public void pop() {
+        stack.pop();
+        minStack.pop();
+    }
+    
+    public int top() {
+        return stack.peek();
+    }
+    
+    public int min() {
+        return minStack.peek();
+    }
+}
+```
+
+## 31 栈的压入弹出序列
+
+输入两个整数序列，第一个序列表示栈的压入顺序，请判断第二个序列是否为该栈的弹出顺序。假设压入栈的所有数字均不相等。例如，序列 {1,2,3,4,5} 是某栈的压栈序列，序列 {4,5,3,2,1} 是该压栈序列对应的一个弹出序列，但 {4,3,5,1,2} 就不可能是该压栈序列的弹出序列。
+
+**示例 1：**
+
+```
+输入：pushed = [1,2,3,4,5], popped = [4,5,3,2,1]
+输出：true
+解释：我们可以按以下顺序执行：
+push(1), push(2), push(3), push(4), pop() -> 4,
+push(5), pop() -> 5, pop() -> 3, pop() -> 2, pop() -> 1
+```
+
+**示例 2：**
+
+```
+输入：pushed = [1,2,3,4,5], popped = [4,3,5,1,2]
+输出：false
+解释：1 不能在 2 之前弹出。
+```
+
+**提示：**
+
+- 0 <= pushed.length == popped.length <= 1000
+- 0 <= pushed[i], popped[i] < 1000
+- pushed 是 popped 的排列。
+
+**解法：**
+
+使用一个栈，如果`pushed[i] != poped[j]`就不断入栈，反之就不断出栈，最后栈空就表示poped是正确的序列
+
+```java
+class Solution {
+    public boolean validateStackSequences(int[] pushed, int[] popped) {
+        Deque<Integer> stack = new LinkedList<>();
+        int idx = 0;
+        for (int i = 0; i < pushed.length; i++) {
+            if (stack.isEmpty() || stack.peek() != popped[idx]) {
+                stack.push(pushed[i]);
+            }
+            while (!stack.isEmpty() && stack.peek() == popped[idx]) {
+                stack.pop();
+                idx++;
+            }
+        }
+        return stack.isEmpty();
+    }
+}
+```
+
+## 32-I 从上到下打印二叉树
+
+从上到下打印出二叉树的每个节点，同一层的节点按照从左到右的顺序打印。
+
+**例如:**
+
+```
+给定二叉树: [3,9,20,null,null,15,7],
+
+	3
+   / \
+  9  20
+    /  \
+   15   7
+返回：
+
+[3,9,20,15,7]
+```
+
+**提示：**
+
+- 节点总数 <= 1000
+
+
+**解法：**
+
+```java
+class Solution {
+    public int[] levelOrder(TreeNode root) {
+        Queue<TreeNode> queue = new LinkedList<>();
+        if (root == null) return new int[0];
+        ArrayList<Integer> list = new ArrayList<>();
+        queue.offer(root);
+        while(!queue.isEmpty()) {
+            TreeNode node = queue.poll();
+            if (node.left != null) queue.offer(node.left);
+            if (node.right != null) queue.offer(node.right);
+            list.add(node.val);
+        }
+        int[] res = new int[list.size()];
+        for (int i = 0; i < list.size(); i++) res[i] = list.get(i);
+        return res;
+    }
+}
+```
+
+## 32-II 从上到下打印二叉树II
+
+从上到下按层打印二叉树，同一层的节点按从左到右的顺序打印，每一层打印到一行。
+
+**例如:**
+
+```
+给定二叉树: [3,9,20,null,null,15,7],
+
+    3
+   / \
+  9  20
+    /  \
+   15   7
+返回其层次遍历结果：
+
+[
+  [3],
+  [9,20],
+  [15,7]
+]
+```
+
+**提示：**
+
+- 节点总数 <= 1000
+
+
+**解法：**
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        List<List<Integer>> res = new LinkedList<>();
+        if (root == null) return res;
+        Queue<TreeNode> queue = new LinkedList();
+        queue.offer(root);
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            List<Integer> list = new LinkedList<>();
+            for (int i = 0; i < size; i++) {
+                TreeNode node = queue.poll();
+                if (node.left != null) queue.offer(node.left);
+                if (node.right != null) queue.offer(node.right);
+                list.add(node.val);
+            }
+            res.add(list);
+        }
+        return res;
+    }
+}
+```
+
+## 32-III 从上到下打印二叉树III
+
+请实现一个函数按照之字形顺序打印二叉树，即第一行按照从左到右的顺序打印，第二层按照从右到左的顺序打印，第三行再按照从左到右的顺序打印，其他行以此类推。
+
+**例如:**
+
+```
+给定二叉树: [3,9,20,null,null,15,7],
+
+    3
+   / \
+  9  20
+    /  \
+   15   7
+返回其层次遍历结果：
+
+[
+  [3],
+  [20,9],
+  [15,7]
+]
+```
+
+**提示：**
+
+- 节点总数 <= 1000
+
+
+**解法：**
+
+这道题在上一题的基础上，增加了偶数行倒序输出的要求，所以要在偶数行输出时加一个栈
+
+```java
+class Solution {
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        List<List<Integer>> res = new LinkedList<>();
+        if (root == null) return res;
+        int level = 1;
+        Deque<Integer> stack = new LinkedList<>();
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.offer(root);
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            List<Integer> list = new LinkedList<>();
+            if ((level & 1) == 1) {
+                for (int i = 0; i < size; i++) {
+                    TreeNode node = queue.poll();
+                    if (node.left != null) queue.offer(node.left);
+                    if (node.right != null) queue.offer(node.right);
+                    list.add(node.val);
+                }
+            } else {
+                for (int i = 0; i < size; i++) {
+                    TreeNode node = queue.poll();
+                    if (node.left != null) queue.offer(node.left);
+                    if (node.right != null) queue.offer(node.right);
+                    stack.push(node.val);
+                }
+                while(!stack.isEmpty()) list.add(stack.pop());
+            }
+            level++;
+            res.add(list);
+        }
+        return res;
+    }
+}
+```
+
+## 33 二叉搜索树的后序遍历序列
+
+输入一个整数数组，判断该数组是不是某二叉搜索树的后序遍历结果。如果是则返回 true，否则返回 false。假设输入的数组的任意两个数字都互不相同。
+
+ 
+
+参考以下这颗二叉搜索树：
+
+```
+     5
+    / \
+   2   6
+  / \
+ 1   3
+```
+
+**示例 1：**
+
+```
+输入: [1,6,3,2,5]
+输出: false
+```
+
+**示例 2：**
+
+```
+输入: [1,3,2,6,5]
+输出: true
+```
+
+**提示：**
+
+- 数组长度 <= 1000
+
+
+**解法：**
+
+最右边的是根节点，左子树应该都小于根节点，右子树应该都大于根节点。
+
+```
+class Solution {
+    public boolean verifyPostorder(int[] postorder) {
+        return verfiyPart(postorder, 0, postorder.length - 1);
+    }
+
+    private boolean verfiyPart(int[] postorder, int left, int right) {
+        if (left >= right) return true;
+        int rootVal = postorder[right];
+        int i = left;
+        for (; i < right; i++)
+            if (postorder[i] >= rootVal) break;
+        for (int j = i; j < right; j++) 
+            if (postorder[j] < rootVal) return false;
+        return verfiyPart(postorder, left, i - 1) && 
+                verfiyPart(postorder, i, right - 1);
+    }
+}
+```
+
+## 34 二叉树中和为某一值的路径
+
+输入一棵二叉树和一个整数，打印出二叉树中节点值的和为输入整数的所有路径。从树的根节点开始往下一直到叶节点所经过的节点形成一条路径。
+
+**示例:**
+给定如下二叉树，以及目标和 sum = 22，
+
+              5
+             / \
+            4   8
+           /   / \
+          11  13  4
+         /  \    / \
+        7    2  5   1
+**返回:**
+
+```
+[
+   [5,4,11,2],
+   [5,8,4,5]
+]
+```
+
+**提示：**
+
+- 节点总数 <= 10000
+
+
+**解法：**
+
+使用回溯，缺点是最终结果完全相反，需要反转每个子链表，并且反转大链表
+
+```java
+class Solution {
+    LinkedList<List<Integer>> res = new LinkedList<>();
+    LinkedList<List<Integer>> revRes = new LinkedList<>();
+
+    public List<List<Integer>> pathSum(TreeNode root, int sum) {
+        if (root == null) return res;
+        LinkedList<Integer> list = new LinkedList<Integer>();
+        backTrace(list, root, sum);
+        // 每个小链表反转，大链表也要反转
+        while(!res.isEmpty()) {
+            LinkedList<Integer> tmp = (LinkedList<Integer>)res.pop();
+            LinkedList<Integer> revTmp = new LinkedList<Integer>();
+            while(!tmp.isEmpty()) {
+                revTmp.push(tmp.pop());
+            }
+            revRes.push(revTmp);
+        }
+        return revRes;
+    }
+
+    private void backTrace(LinkedList<Integer> list, TreeNode root, int sum){
+        if (sum == root.val && root.left == null && root.right == null) {
+            list.push(root.val);
+            res.push(new LinkedList(list));
+            list.pop();
+            return;
+        }
+        if (root.left != null) {
+            list.push(root.val);
+            backTrace(list, root.left, sum - root.val);
+            list.pop();
+        }
+        if (root.right != null) {
+            list.push(root.val);
+            backTrace(list, root.right, sum - root.val);
+            list.pop();
+        }
+    }
+}
+```
+
