@@ -1961,3 +1961,173 @@ class Solution {
 }
 ```
 
+树上的解法，也是回溯
+
+```java
+class Solution {
+    LinkedList<List<Integer>> res = new LinkedList<>();
+    LinkedList<Integer> stack = new LinkedList<>();
+
+    public List<List<Integer>> pathSum(TreeNode root, int sum) {
+        if (root == null) return res;
+        backTrace(root, sum);
+        return res;
+    }
+
+    private void backTrace(TreeNode root, int sum){  
+        stack.addLast(root.val);    // 必须加在这里，不然少输出一个结点
+        if (root.left == null && root.right == null && root.val == sum) {
+            LinkedList<Integer> list = new LinkedList<>();
+            Iterator<Integer> iter = stack.iterator();
+            while (iter.hasNext()) {
+                list.add(iter.next());
+            }
+            res.addLast(list);
+        }
+        
+        if (root.left != null) backTrace(root.left, sum - root.val);
+        if (root.right != null) backTrace(root.right, sum - root.val);
+        stack.pollLast();
+    }
+}
+```
+
+## 35 复杂链表的复制
+
+请实现 copyRandomList 函数，复制一个复杂链表。在复杂链表中，每个节点除了有一个 next 指针指向下一个节点，还有一个 random 指针指向链表中的任意节点或者 null。
+
+**示例 ：**
+
+![](img/65.png)
+
+```
+输入：head = [[7,null],[13,0],[11,4],[10,2],[1,0]]
+输出：[[7,null],[13,0],[11,4],[10,2],[1,0]]
+```
+
+**提示：**
+
+- `-10000 <= Node.val <= 10000`
+- `Node.random` 为空（null）或指向链表中的节点。
+- 节点数目不超过 1000 。
+
+**解法：**
+
+使用哈希表，时间空间复杂度均为O(n)。
+
+```java
+class Solution {
+    public Node copyRandomList(Node head) {
+        if (head == null) return null;
+        Map<Node, Node> map = new HashMap<>();
+        Node node = head;
+        // 复制val
+        while (node != null) {
+            Node copy = new Node(node.val);
+            map.put(node, copy);
+            node = node.next;
+        }
+        // 复制next和random
+        node = head;
+        while (node != null) {
+            map.get(node).next = map.get(node.next);
+            map.get(node).random = map.get(node.random);
+            node = node.next;
+        }
+        return map.get(head);
+    }
+}
+```
+
+书上的解法，说是原地的，但链表长度还是扩展了一倍
+
+```java
+class Solution {
+    public Node copyRandomList(Node head) {
+        if (head == null) return null;
+        cloneNodes(head);
+        connectRandom(head);
+        return reconnectNodes(head);
+    }
+
+    // 把每一个复制的结点放到原结点后面
+    private void cloneNodes(Node head) {
+        while (head != null) {
+            Node node = new Node(head.val);
+            node.next = head.next;
+            head.next = node;
+            head = node.next;
+        }
+    }
+
+    // 连接复制结点的random
+    private void connectRandom(Node head) {
+        while (head != null) {
+            if (head.random != null)
+                head.next.random = head.random.next;
+            head = head.next.next;
+        }
+    }
+
+    // 把链表分成两个
+    private Node reconnectNodes(Node head) {
+        Node cloneHead = head.next;
+        Node cloneNode = cloneHead;
+        head.next = cloneNode.next;
+        head = head.next;
+        while (head != null) {
+            cloneNode.next = head.next;
+            cloneNode = cloneNode.next;
+            head.next = cloneNode.next;
+            head = head.next;
+        }
+        return cloneHead;
+    }
+}
+```
+
+## 36 二叉搜索树与双向链表
+
+输入一棵二叉搜索树，将该二叉搜索树转换成一个排序的循环双向链表。要求不能创建任何新的节点，只能调整树中节点指针的指向。
+
+为了让您更好地理解问题，以下面的二叉搜索树为例：
+
+<img src="img/66.png" style="zoom:50%;" />
+
+我们希望将这个二叉搜索树转化为双向循环链表。链表中的每个节点都有一个前驱和后继指针。对于双向循环链表，第一个节点的前驱是最后一个节点，最后一个节点的后继是第一个节点。
+
+下图展示了上面的二叉搜索树转化成的链表。“head” 表示指向链表中有最小元素的节点。
+
+<img src="img/67.png" style="zoom: 50%;" />
+
+特别地，我们希望可以就地完成转换操作。当转化完成以后，树中节点的左指针需要指向前驱，树中节点的右指针需要指向后继。还需要返回链表中的第一个节点的指针。
+
+ **解法：**
+
+[高赞题解](https://leetcode-cn.com/problems/er-cha-sou-suo-shu-yu-shuang-xiang-lian-biao-lcof/solution/mian-shi-ti-36-er-cha-sou-suo-shu-yu-shuang-xian-5/)
+
+```java
+class Solution {
+    private Node head = null;  // 要返回的头结点
+    private Node pre = null;   // 递归中小于当前结点的结点，最终的尾结点
+
+    public Node treeToDoublyList(Node root) {
+        if (root == null) return null;
+        dfs(root);
+        head.left = pre;
+        pre.right = head;
+        return head;
+    }
+
+    private void dfs(Node cur) {
+        if (cur == null) return;
+        dfs(cur.left);
+        cur.left = pre;
+        if (pre != null) pre.right = cur;
+        else head = cur;
+        pre = cur;
+        dfs(cur.right);
+    }
+}
+```
+
