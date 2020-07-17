@@ -2431,3 +2431,226 @@ class Solution {
 }
 ```
 
+## 40 最小的K个数
+
+输入整数数组 arr ，找出其中最小的 k 个数。例如，输入4、5、1、6、2、7、3、8这8个数字，则最小的4个数字是1、2、3、4。
+
+**示例 1：**
+
+```
+输入：arr = [3,2,1], k = 2
+输出：[1,2] 或者 [2,1]
+```
+
+**示例 2：**
+
+```
+输入：arr = [0,1,2,1], k = 1
+输出：[0]
+```
+
+**限制：**
+
+- 0 <= k <= arr.length <= 10000
+- 0 <= arr[i] <= 10000
+
+**解法：**
+
+基于快排partition的做法
+
+```java
+class Solution {
+    public int[] getLeastNumbers(int[] arr, int k) {
+        int[] res = new int[k];
+        if (arr.length == 0 || k == 0) return res;
+        int start = 0, end = arr.length - 1;
+        int index = partition(arr, start, end);
+        while (index != k - 1) {
+            if (index > k - 1) {
+                end = index - 1;
+                index = partition(arr, start, end);
+            } else {
+                start = index + 1;
+                index = partition(arr, start, end);
+            }
+        }
+        for (int i = 0; i < k; i++) {
+            res[i] = arr[i];
+        }
+        return res;
+    }
+
+    private int partition(int[] arr, int start, int end) {
+        Random random = new Random();
+        int index = random.nextInt(end - start + 1) + start;
+        swap(arr, start, end);
+        int small = start - 1;
+        for (int i = start; i < end; i++) {
+            if (arr[i] < arr[end]) {
+                small++;
+                if (small != i) swap(arr, small, i);
+            }
+        }
+        small++;
+        swap(arr, small, end);
+        return small;
+    }
+
+    private void swap(int [] arr, int start, int end) {
+        int tmp = arr[start];
+        arr[start] = arr[end];
+        arr[end] = tmp;
+    }
+}
+```
+
+基于堆的做法，适合海量数据
+
+```java
+class Solution {
+    public int[] getLeastNumbers(int[] arr, int k) {
+        if (arr.length == 0 || k == 0) return new int[0];
+        Heap heap = new Heap(k);
+        for (int a : arr) heap.add(a);
+        return heap.getAll();
+    }
+}
+
+class Heap {    // 最大堆
+    int[] value;
+
+    public Heap(int length) {
+        value = new int[length];
+        Arrays.fill(value, Integer.MAX_VALUE);
+    }
+    
+    public void add(int num) {
+        value[0] = Math.min(value[0], num);
+        maxHeapify(0);
+    }
+
+    public int[] getAll() {
+        return value;
+    }
+
+    // 结点i的左右都是有序的，而i可能小于它的左右，所以需要下沉
+    private void maxHeapify(int i) {
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
+        int largest = i;
+        if (left < value.length && value[left] > value[largest])
+            largest = left;
+        if (right < value.length && value[right] > value[largest])
+            largest = right;
+        if (largest != i) {
+            swap(largest, i);
+            maxHeapify(largest);
+        }
+    }
+
+    private void swap(int a, int b) {
+        int tmp = value[a];
+        value[a] = value[b];
+        value[b] = tmp;
+    }
+}
+```
+
+或者使用java中的优先队列
+
+```java
+class Solution {
+    public int[] getLeastNumbers(int[] arr, int k) {
+        if (arr.length == 0 || k == 0) return new int[0];
+        Queue<Integer> pq = new PriorityQueue<>((v1, v2) -> v2 - v1);
+        for (int a : arr) {
+            if (pq.size() < k) pq.offer(a);
+            else if (a < pq.peek()) {
+                pq.poll();
+                pq.offer(a);
+            }
+        }
+        int[] res = new int[pq.size()];
+        int idx = 0;
+        for (int n : pq) res[idx++] = n;
+        return res;
+    }
+}
+```
+
+## 41 数据流中的中位数
+
+如何得到一个数据流中的中位数？如果从数据流中读出奇数个数值，那么中位数就是所有数值排序之后位于中间的数值。如果从数据流中读出偶数个数值，那么中位数就是所有数值排序之后中间两个数的平均值。
+
+例如，
+
+[2,3,4] 的中位数是 3
+
+[2,3] 的中位数是 (2 + 3) / 2 = 2.5
+
+设计一个支持以下两种操作的数据结构：
+
+- void addNum(int num) - 从数据流中添加一个整数到数据结构中。
+- double findMedian() - 返回目前所有元素的中位数。
+
+**示例 1：**
+
+```
+输入：
+["MedianFinder","addNum","addNum","findMedian","addNum","findMedian"]
+[[],[1],[2],[],[3],[]]
+输出：[null,null,null,1.50000,null,2.00000]
+```
+
+**示例 2：**
+
+```
+输入：
+["MedianFinder","addNum","findMedian","addNum","findMedian"]
+[[],[2],[],[3],[]]
+输出：[null,null,2.00000,null,2.50000]
+```
+
+**限制：**
+
+- 最多会对 addNum、findMedia进行 50000 次调用。
+
+
+**解法：**
+
+使用两个堆，数组的左半边放到大根堆里，右半边放到小根堆里，这样堆顶就都是数组中间的数。
+
+入A堆时，先把当前元素加入B堆，再把B堆的堆顶入到A堆，这样就可以保证两个堆各占数组一边，代码中是先入右小根堆，再入左大根堆，所以数组个数是偶数个，中位数就是两个堆顶的平均，奇数就是右小根堆的堆顶。
+
+```java
+class MedianFinder {
+    Queue<Integer> maxHeap; // 左半边放最大堆
+    Queue<Integer> minHeap; // 右半边放最小堆
+
+    /** initialize your data structure here. */
+    public MedianFinder() {
+        maxHeap = new PriorityQueue<>((v1, v2) -> v2 - v1);
+        minHeap = new PriorityQueue<>();
+    }
+    
+    public void addNum(int num) {
+        if (maxHeap.size() < minHeap.size()) {
+            minHeap.offer(num);
+            maxHeap.offer(minHeap.poll());
+        } else {
+            maxHeap.offer(num);
+            minHeap.offer(maxHeap.poll());
+        }
+    }
+    
+    public double findMedian() {
+        if (maxHeap.size() == minHeap.size()) {
+            return (maxHeap.peek() + minHeap.peek()) / 2.0;
+        }
+        return minHeap.peek();
+    }
+}
+```
+
+
+
