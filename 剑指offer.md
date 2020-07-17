@@ -2131,3 +2131,303 @@ class Solution {
 }
 ```
 
+## 37 序列化二叉树
+
+请实现两个函数，分别用来序列化和反序列化二叉树。
+
+**示例:** 
+
+```
+你可以将以下二叉树：
+
+    1
+   / \
+  2   3
+     / \
+    4   5
+
+序列化为 "[1,2,3,null,null,4,5]"
+```
+
+**解法：**
+
+```java
+public class Codec {
+    int index = 0;  // 给反序列化用的全局变量
+
+    // Encodes a tree to a single string.
+    public String serialize(TreeNode root) {
+        if (root == null) return "#";
+        StringBuilder res = new StringBuilder();
+        recursion(root, res);
+        return res.toString();
+    }
+
+    private void recursion(TreeNode root, StringBuilder res) {
+        if (root == null) {
+            res.append('#').append(',');
+            return;
+        }
+        res.append(root.val).append(',');
+        recursion(root.left, res);
+        recursion(root.right, res);
+    }
+
+    // Decodes your encoded data to tree.
+    public TreeNode deserialize(String data) {
+        if (data.equals("#")) return null;
+        String[] inputs = data.split(",");
+        return build(inputs);
+    }
+
+    private TreeNode build(String[] inputs) {
+        if (inputs[index].equals("#")) {
+            index++;
+            return null;
+        }
+        TreeNode node = new TreeNode(Integer.parseInt(inputs[index]));
+        index++;
+        node.left = build(inputs);
+        node.right = build(inputs);
+        return node;
+    }
+}
+```
+
+如果不使用全局变量index，可以使用一个队列：
+
+```java
+public class Codec {
+    // Encodes a tree to a single string.
+    public String serialize(TreeNode root) {
+        return recursion(root);
+    }
+
+    // 基于先序的序列化： 当前结点 左 右
+    public String recursion(TreeNode node) {
+        if (node == null) return "# ";
+        StringBuilder sb = new StringBuilder();
+        sb.append(node.val).append(" ");
+        sb.append(recursion(node.left));
+        sb.append(recursion(node.right));
+        return sb.toString();
+    }
+
+    // Decodes your encoded data to tree.
+    public TreeNode deserialize(String data) {
+        // 边界条件
+        if (data == null) return null;
+        // 拆分序列化字符串 并装入队列
+        String values[] = data.split(" ");
+        Queue<String> queue = new LinkedList<>();
+        for (String str : values){
+            queue.offer(str);
+        }
+        return recursiveRecovery(queue);
+    }
+
+    public TreeNode recursiveRecovery(Queue<String> queue){
+        String str = queue.poll();
+        if (str.equals("#")) return null;
+        // 按照相同的当前 左 右 的顺序恢复
+        TreeNode root = new TreeNode(Integer.parseInt(str));
+        root.left = recursiveRecovery(queue);
+        root.right = recursiveRecovery(queue);
+        return root;
+    }
+}
+```
+
+## 38 字符串的排列
+
+输入一个字符串，打印出该字符串中字符的所有排列。
+
+你可以以任意顺序返回这个字符串数组，但里面**不能有重复元素**。
+
+**示例:**
+
+```
+输入：s = "abc"
+输出：["abc","acb","bac","bca","cab","cba"]
+```
+
+**限制：**
+
+- 1 <= s 的长度 <= 8
+
+**解法：**
+
+使用全排列套路模板 + set判断是否选取过 + set去重
+
+```java
+class Solution {
+    Set<String> res = new HashSet<>();
+
+    public String[] permutation(String s) {
+        StringBuilder sb = new StringBuilder();
+        Set<Integer> set = new HashSet<>();
+        backTrace(s, set, sb);
+        String[] ans = new String[res.size()];
+        int idx = 0;
+        for (String str : res) {
+            ans[idx++] = str;
+        }
+        return ans;
+    }
+
+    private void backTrace(String s, Set<Integer> set, StringBuilder sb) {
+        if (sb.length() == s.length()) {
+            res.add(sb.toString());
+            return;
+        }
+        for (int i = 0; i < s.length(); i++) {
+            if (set.contains(i)) continue;
+            set.add(i);
+            sb.append(s.charAt(i));
+            backTrace(s, set, sb);
+            set.remove(i);
+            sb.deleteCharAt(sb.length() - 1);
+        }
+    }
+}
+```
+
+书上的解法：也是修改，深入，撤销修改的回溯结构
+
+```java
+class Solution {
+    List<String> res = new ArrayList<>();
+    char[] c;
+
+    public String[] permutation(String s) {
+        c = s.toCharArray();
+        dfs(0);
+        return res.toArray(new String[res.size()]);
+    }
+
+    private void dfs(int start) {
+        if (start == c.length - 1) {
+            res.add(String.valueOf(c));
+            return;
+        }
+        Set<Character> set = new HashSet();
+        for (int i = start; i < c.length; i++) {
+            if (set.contains(c[i])) continue;
+            set.add(c[i]);
+            swap(i, start); // 求出所有可能出现在第一个位置的字符
+            dfs(start + 1); // 固定第一个字符，求后面所有字符的全排列
+            swap(i, start); // 第一个字符逐个和后面的字符交换
+        }
+    }
+
+    private void swap(int a, int b) {
+        char tmp = c[a];
+        c[a] = c[b];
+        c[b] = tmp;
+    }
+}
+```
+
+## 39 数组中出现次数超过一半的数字
+
+数组中有一个数字出现的次数超过数组长度的一半，请找出这个数字。
+
+你可以假设数组是非空的，并且给定的数组总是存在多数元素。
+
+**示例:**
+
+```
+输入: [1, 2, 3, 2, 2, 2, 5, 4, 2]
+输出: 2
+```
+
+**限制：**
+
+- 1 <= 数组长度 <= 50000
+
+ **第一时间想到的解法：**
+
+```java
+class Solution {
+    public int majorityElement(int[] nums) {
+        Map<Integer, Integer> map = new HashMap<>();
+        for (int n : nums)
+            map.put(n, map.getOrDefault(n, 0) + 1);
+        for (Map.Entry<Integer, Integer> entry : map.entrySet()) {
+            if (entry.getValue() > nums.length / 2)
+                return entry.getKey();
+        }
+        return -1;
+    }
+}
+```
+
+**书上基于快排的partition函数的解法：**
+
+思想是求出数组的中位数，如果输入符合要求，那么这个中位数一定是数组中存在最多的元素。
+
+```java
+class Solution {
+    public int majorityElement(int[] nums) {
+        // 省略检测nums是否是空指针 以及 nums长度
+        int mid = nums.length >> 1;
+        int start = 0;
+        int end = nums.length - 1;
+        int index = partition(nums, start, end);
+        while (index != mid) {
+            if (index > mid) {
+                end = index - 1;
+                index = partition(nums, start, end);
+            } else {
+                start = index + 1;
+                index = partition(nums, start, end);
+            }
+        }
+        // 省略检测是否过半
+        return nums[mid];
+    }
+
+    private int partition(int[] data, int start, int end) {
+        Random random = new Random();
+        int index = random.nextInt(end - start + 1) + start;
+        swap(data, index, end);
+        int small = start - 1;
+        for (int i = start; i < end; i++) {
+            if (data[i] < data[end]) {
+                ++small;
+                if (small != i) swap(data, small, i);
+            }
+        }
+        ++small;
+        swap(data, small, end);
+        return small;
+    }
+
+    private void swap(int[] data, int start, int end) {
+        int tmp = data[start];
+        data[start] = data[end];
+        data[end] = tmp;
+    }
+}
+```
+
+使用摩尔投票法求众数
+
+```java
+class Solution {
+    public int majorityElement(int[] nums) {
+        int m = 0;  // 众数
+        int count = 0;
+        for (int i = 0; i < nums.length; i++) {
+            if (count == 0) {
+                m = nums[i];
+                count = 1;
+            }
+            else if (m == nums[i]) count++;
+            else count--;
+        }
+        return m;
+    }
+}
+```
+
