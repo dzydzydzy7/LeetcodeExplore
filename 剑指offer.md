@@ -2652,5 +2652,46 @@ class MedianFinder {
 }
 ```
 
+## 42 连续子数组的最大和
 
+输入一个整型数组，数组里有正数也有负数。数组中的一个或连续多个整数组成一个子数组。求所有子数组的和的最大值。
+
+要求时间复杂度为O(n)。
+
+**示例1:**
+
+```
+输入: nums = [-2,1,-3,4,-1,2,1,-5,4]
+输出: 6
+解释: 连续子数组 [4,-1,2,1] 的和最大，为 6。
+```
+
+**提示：**
+
+- 1 <= arr.length <= 10^5
+- -100 <= arr[i] <= 100
+
+**解法：**
+
+状态：dp[i] 就是到下标 i - 1 为止的最大连续和。
+
+转移：要么前面的数不要了，从当前下标开始`dp[i] = nums[i - 1]`；
+
+​			要么和前面的数连起来`dp[i] = dp[i - 1 + nums[i - 1]]`。
+
+```java
+class Solution {
+    public int maxSubArray(int[] nums) {
+        int[] dp = new int[nums.length + 1];
+        for (int i = 1; i <= nums.length; i++) {
+            dp[i] = Math.max(dp[i - 1] + nums[i - 1], nums[i - 1]);
+        }
+        int res = Integer.MIN_VALUE;
+        for (int i = 1; i < dp.length; i++) {
+            res = Math.max(res, dp[i]);
+        }
+        return res;
+    }
+}
+```
 
