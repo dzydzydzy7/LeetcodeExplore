@@ -2695,3 +2695,295 @@ class Solution {
 }
 ```
 
+## 43 1~n整数中1出现的次数
+
+输入一个整数 n ，求1～n这n个整数的十进制表示中1出现的次数。
+
+例如，输入12，1～12这些整数中包含1 的数字有1、10、11和12，1一共出现了5次。
+
+**示例 1：**
+
+```
+输入：n = 12
+输出：5
+```
+
+**示例 2：**
+
+```
+输入：n = 13
+输出：6
+```
+
+**限制：**
+
+- 1 <= n < 2^31
+
+**解法：**
+
+[题解](https://leetcode-cn.com/problems/1nzheng-shu-zhong-1chu-xian-de-ci-shu-lcof/solution/mian-shi-ti-43-1n-zheng-shu-zhong-1-chu-xian-de-2/)
+
+```java
+class Solution {
+    public int countDigitOne(int n) {
+        int low = 0;
+        int digit = 1;
+        int res = 0;
+        while (digit <= n) {
+            int high = n / (digit * 10);
+            int cur = (n % (digit * 10)) / digit;
+            if (cur == 0) res += high * digit;
+            else if (cur == 1) res += high * digit + low + 1;
+            else res += (high + 1) * digit;
+            n -= cur * digit;
+            low += cur * digit;
+            digit *= 10;
+        } 
+        return res;
+    }
+}
+```
+
+## 44 数字序列中某一位的数字
+
+数字以0123456789101112131415…的格式序列化到一个字符序列中。在这个序列中，第5位（从下标0开始计数）是5，第13位是1，第19位是4，等等。
+
+请写一个函数，求任意第n位对应的数字。
+
+**示例 1：**
+
+```
+输入：n = 3
+输出：3
+```
+
+**示例 2：**
+
+```
+输入：n = 11
+输出：0
+```
+
+**限制：**
+
+- 0 <= n < 2^31
+
+
+**解法：**
+
+```java
+class Solution {
+    public int findNthDigit(int n) {
+        if (n < 0) return -1;
+        int digit = 1;
+        while (true) {
+            long numbers = countNumbers(digit);
+            if (n < numbers) return find(n, digit);
+            n -= numbers;
+            digit++;
+        }
+    }
+
+    private long countNumbers(int digit) {
+        if (digit == 1) return 10;
+        return 9 * (long)Math.pow(10, digit - 1) * digit;
+    }
+
+    private int find(int n, int digit) {
+        if (digit == 1) return n;
+        int num = n / digit;
+        int posi = n % digit;
+        int value = (int)Math.pow(10, digit - 1) + num;
+        String str = String.valueOf(value);
+        return Integer.parseInt("" + str.charAt(posi));
+    }
+}
+```
+
+## 45 把数组排成最小的数
+
+输入一个非负整数数组，把数组里所有数字拼接起来排成一个数，打印能拼接出的所有数字中最小的一个。
+
+**示例 1:**
+
+```
+输入: [10,2]
+输出: "102"
+```
+
+**示例 2:**
+
+```
+输入: [3,30,34,5,9]
+输出: "3033459"
+```
+
+**提示:**
+
+- 0 < nums.length <= 100
+
+**说明:**
+
+- 输出结果可能非常大，所以你需要返回一个字符串而不是整数
+- 拼接起来的数字可能会有前导 0，最后结果不需要去掉前导 0
+
+**解法：**
+
+对字符串的排序方法：`(s1 + s2).compareTo(s2 + s1);`
+
+```java
+class Solution {
+    public String minNumber(int[] nums) {
+        String[] arr = new String[nums.length];
+        for (int i = 0; i < nums.length; i++) {
+            arr[i] = String.valueOf(nums[i]);
+        }
+        Arrays.sort(arr, (s1, s2) -> {return (s1+s2).compareTo(s2+s1);});
+        StringBuilder sb = new StringBuilder();
+        for (String s: arr) sb.append(s);
+        return sb.toString();
+    }
+}
+```
+
+## 46 把数字翻译成字符串
+
+给定一个数字，我们按照如下规则把它翻译为字符串：0 翻译成 “a” ，1 翻译成 “b”，……，11 翻译成 “l”，……，25 翻译成 “z”。一个数字可能有多个翻译。请编程实现一个函数，用来计算一个数字有多少种不同的翻译方法。
+
+**示例 1:**
+
+```
+输入: 12258
+输出: 5
+解释: 12258有5种不同的翻译，分别是"bccfi", "bwfi", "bczi", "mcfi"和"mzi"
+```
+
+**提示：**
+
+- $0 <= num < 2^{31}$
+
+
+**解法：**
+
+状态：dp[i]就是前 i 个数字能有几种翻译方法
+
+转移：如果和前一个数组组合起来小于26，`dp[i] = dp[i - 1] + dp[i - 2]`意为前 n - 2 个数字接一个两位数和前 n - 1 接一位数两种情况
+
+basecase：dp[0] =  dp[1] = 1
+
+```java
+class Solution {
+    public int translateNum(int num) {
+        String str = String.valueOf(num);
+        int[] dp = new int[str.length() + 1];
+        dp[0] = dp[1] = 1;
+        for (int i = 2; i < dp.length; i++) {
+            if (str.charAt(i - 2) == '2' && str.charAt(i - 1) <= '5')
+                dp[i] = dp[i - 1] + dp[i - 2];
+            else if (str.charAt(i - 2) == '1') 
+                dp[i] = dp[i - 1] + dp[i - 2];
+            else dp[i] = dp[i - 1];
+        }
+        return dp[str.length()];
+    }
+}
+```
+
+## 47 礼物的最大价值
+
+在一个 m*n 的棋盘的每一格都放有一个礼物，每个礼物都有一定的价值（价值大于 0）。你可以从棋盘的左上角开始拿格子里的礼物，并每次向右或者向下移动一格、直到到达棋盘的右下角。给定一个棋盘及其上面的礼物的价值，请计算你最多能拿到多少价值的礼物？
+
+**示例 1:**
+
+```
+输入: 
+[
+  [1,3,1],
+  [1,5,1],
+  [4,2,1]
+]
+输出: 12
+解释: 路径 1→3→5→2→1 可以拿到最多价值的礼物
+```
+
+**提示：**
+
+- 0 < grid.length <= 200
+- 0 < grid[0].length <= 200
+
+**解法：**
+
+```java
+class Solution {
+    public int maxValue(int[][] grid) {
+        if (grid.length == 0 || grid[0].length == 0) return 0;
+        int row = grid.length, col = grid[0].length;
+        for (int i = 1; i < row; i++)
+            grid[i][0] += grid[i - 1][0];
+        for (int i = 1; i < col; i++)
+            grid[0][i] += grid[0][i - 1];
+        for (int i = 1; i < row; i++)
+            for (int j = 1; j < col; j++) {
+                grid[i][j] += Math.max(grid[i - 1][j], grid[i][j - 1]);
+            }
+        return grid[row - 1][col - 1];
+    }
+}
+```
+
+## 48 最长不含重复字符的子字符串
+
+请从字符串中找出一个最长的不包含重复字符的子字符串，计算该最长子字符串的长度。
+
+**示例 1:**
+
+```
+输入: "abcabcbb"
+输出: 3 
+解释: 因为无重复字符的最长子串是 "abc"，所以其长度为 3。
+```
+
+**示例 2:**
+
+```
+输入: "bbbbb"
+输出: 1
+解释: 因为无重复字符的最长子串是 "b"，所以其长度为 1。
+```
+
+**示例 3:**
+
+```
+输入: "pwwkew"
+输出: 3
+解释: 因为无重复字符的最长子串是 "wke"，所以其长度为 3。
+     请注意，你的答案必须是 子串 的长度，"pwke" 是一个子序列，不是子串。
+```
+
+**提示：**
+
+- s.length <= 40000
+
+
+**解法：**
+
+```java
+class Solution {
+    public int lengthOfLongestSubstring(String s) {
+        Set<Character> set = new HashSet<>();
+        int left = 0, right = 0, res = 0;
+        while (right < s.length()) {
+            if (set.contains(s.charAt(right))) {
+                res = Math.max(res, set.size());
+                while (s.charAt(left) != s.charAt(right))
+                    set.remove(s.charAt(left++));
+                set.remove(s.charAt(left));
+                left++;
+            }
+            set.add(s.charAt(right++));
+        }
+        return Math.max(res, set.size());
+    }
+}
+```
+
