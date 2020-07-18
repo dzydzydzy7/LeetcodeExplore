@@ -2987,3 +2987,86 @@ class Solution {
 }
 ```
 
+## 49 丑数
+
+我们把只包含质因子 2、3 和 5 的数称作丑数（Ugly Number）。求按从小到大的顺序的第 n 个丑数。
+
+**示例:**
+
+```
+输入: n = 10
+输出: 12
+解释: 1, 2, 3, 4, 5, 6, 8, 9, 10, 12 是前 10 个丑数。
+```
+
+**说明:**  
+
+- 1 是丑数。
+- n 不超过1690。
+
+**解法：**
+
+这个题用三指针，第一个丑数是1，以后的丑数都是基于前面的小丑数分别乘2，3，5构成的。我们每次添加进去一个当前计算出来个三个丑数的最小的一个，并且是谁计算的，谁指针就后移一位。
+
+```java
+class Solution {
+    public int nthUglyNumber(int n) {
+        if (n <= 0) return 0;
+        int[] ugly = new int[n];
+        ugly[0] = 1;
+        int mul2 = 0, mul3 = 0, mul5 = 0;
+        for (int i = 1; i < n; i++) {
+            ugly[i] = threeMin(ugly[mul2]*2, ugly[mul3]*3, ugly[mul5]*5);
+            if (ugly[mul2] * 2 == ugly[i]) mul2++;
+            if (ugly[mul3] * 3 == ugly[i]) mul3++;
+            if (ugly[mul5] * 5 == ugly[i]) mul5++;
+        }
+        return ugly[n - 1];
+    }
+
+    private int threeMin(int n1, int n2, int n3) {
+        int res = Math.min(n1, n2);
+        return Math.min(res, n3);
+    }
+}
+```
+
+## 50 第一个只出现一次的字符
+
+在字符串 s 中找出第一个只出现一次的字符。如果没有，返回一个单空格。 s 只包含小写字母。
+
+**示例:**
+
+```
+s = "abaccdeff"
+返回 "b"
+
+s = "" 
+返回 " "
+```
+
+**限制：**
+
+- 0 <= s 的长度 <= 50000
+
+
+**解法：**
+
+```java
+class Solution {
+    public char firstUniqChar(String s) {
+        if (s.length() == 0) return ' ';
+        Map<Character, Integer> map = new HashMap<>();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            map.put(c, map.getOrDefault(c, 0) + 1);
+        }
+        for (int i = 0; i < s.length(); i++) {
+            if (map.get(s.charAt(i)) == 1)
+                return s.charAt(i);
+        }
+        return ' ';
+    }
+}
+```
+
