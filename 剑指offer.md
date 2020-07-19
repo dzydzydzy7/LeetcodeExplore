@@ -3070,3 +3070,439 @@ class Solution {
 }
 ```
 
+## 51 数组中的逆序对
+
+在数组中的两个数字，如果前面一个数字大于后面的数字，则这两个数字组成一个逆序对。输入一个数组，求出这个数组中的逆序对的总数。
+
+**示例 1:**
+
+```
+输入: [7,5,6,4]
+输出: 5
+```
+
+**限制：**
+
+- 0 <= 数组长度 <= 50000
+
+
+**解法：**
+
+使用树状数组，统计有几个小于当前值的数字。
+
+```java
+class Solution {
+    int c[];
+    int a[];
+
+    public int reversePairs(int[] nums) {
+        discretization(nums);
+        c = new int[a.length];
+        int res = 0;
+        for (int i = nums.length - 1; i >= 0; i--) {
+            int index = getIndex(nums[i]);
+            res += getSum(index - 1);
+            update(index);
+        }
+        return res;
+    }
+
+    private void discretization(int[] nums) {
+        Set<Integer> set = new HashSet<>();
+        for (int n : nums) set.add(n);
+        a = new int[set.size() + 1];
+        int index = 1;
+        for (int n : set) a[index++] = n;
+        Arrays.sort(a, 1, a.length);
+    }
+
+    private int lowBit(int x) {
+        return x & (-x);
+    }
+
+    private int getSum(int idx) {
+        int res = 0;
+        while (idx > 0) {
+            res += c[idx];
+            idx -= lowBit(idx);
+        }
+        return res;
+    }
+
+    private void update(int idx) {
+        while (idx < c.length) {
+            c[idx]++;
+            idx += lowBit(idx);
+        }
+    }
+
+    private int getIndex(int num) {
+        return Arrays.binarySearch(a, 1, a.length, num);
+    }
+}
+```
+
+书上使用了归并排序的思想，当`nums[leftIdx] > nums[rightIdx]`时，在左半部分中 leftIdx 的后面都大于nums[leftIdx]，而右半部分的 rightIdx 及前面的部分都小于nums[lefftIdx]，所以有`right - mid`个逆序对。
+
+复制数组是为了不改变输入数组，与算法本身无关。
+
+```java
+class Solution {
+    public int reversePairs(int[] nums) {
+        if (nums.length == 0) return 0;
+        int[] data = Arrays.copyOf(nums, nums.length);
+        return mergeSort(data, 0, data.length - 1);
+    }
+
+    private int mergeSort(int[] nums, int left, int right) {
+        if (left == right) return 0;
+        int mid = left + (right - left) / 2;
+        int leftCnt = mergeSort(nums, left, mid);
+        int rightCnt = mergeSort(nums, mid + 1, right);
+        int curCnt = merge(nums, left, mid, right);
+        return leftCnt + curCnt + rightCnt;
+    }
+
+    private int merge(int[] nums, int left, int mid, int right) {
+        int[] tmpArr = new int[right - left + 1];
+        int count = 0, tmpIdx = tmpArr.length - 1;
+        int leftIdx = mid, rightIdx = right;
+        while (leftIdx >= left && rightIdx > mid) {
+            if (nums[leftIdx] > nums[rightIdx]) {
+                tmpArr[tmpIdx--] = nums[leftIdx--];
+                // (mid,right]中右指针(含)前面有几个数字
+                // 就代表[left,right]中有几个逆序对
+                count += rightIdx - mid;
+            } else {
+                tmpArr[tmpIdx--] = nums[rightIdx--];
+            }
+        }
+        while (leftIdx >= left) tmpArr[tmpIdx--] = nums[leftIdx--];
+        while (rightIdx > mid) tmpArr[tmpIdx--] = nums[rightIdx--];
+        for (int i = 0; i < tmpArr.length; i++)
+            nums[left++] = tmpArr[i];
+        return count;
+    }
+}
+```
+
+## 52 两个链表的第一个公共结点
+
+输入两个链表，找出它们的第一个公共节点。
+
+**示例：**
+
+<img src="img/69.png" style="zoom:50%;" />
+
+```java
+输入：intersectVal = 8, listA = [4,1,8,4,5], listB = [5,0,1,8,4,5], skipA = 2, skipB = 3
+输出：Reference of the node with value = 8
+输入解释：相交节点的值为 8 （注意，如果两个列表相交则不能为 0）。从各自的表头开始算起，链表 A 为 [4,1,8,4,5]，链表 B 为 [5,0,1,8,4,5]。在 A 中，相交节点前有 2 个节点；在 B 中，相交节点前有 3 个节点。
+```
+
+**解法：**
+
+书上的解法，倒着找，找最后一个相同结点
+
+```java
+public class Solution {
+    public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
+        Deque<ListNode> stackA = new LinkedList<>();
+        Deque<ListNode> stackB = new LinkedList<>();
+        while (headA != null) {
+            stackA.push(headA);
+            headA = headA.next;
+        }
+        while (headB != null) {
+            stackB.push(headB);
+            headB = headB.next;
+        }
+        ListNode res = null;
+        ListNode n1 = null;
+        ListNode n2 = null;
+        while (!stackA.isEmpty() && !stackB.isEmpty()) {
+            n1 = stackA.pop();
+            n2 = stackB.pop();
+            if (n1 != n2) return res; 
+            res = n1;
+        }
+        return n1;
+    }
+}
+```
+
+更快乐的解法，但稍慢些。
+
+```java
+public class Solution {
+    public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
+        Set<ListNode> setA = new HashSet<>();
+        while (headA != null) {
+            setA.add(headA);
+            headA = headA.next;
+        }
+        while (headB != null) {
+            if (setA.contains(headB)) return headB;
+            headB = headB.next;
+        }
+        return null;
+    }
+}
+```
+
+## 53-I 在排序数组中查找数字 I
+
+统计一个数字在排序数组中出现的次数。
+
+**示例 1:**
+
+```
+输入: nums = [5,7,7,8,8,10], target = 8
+输出: 2
+```
+
+**示例 2:**
+
+```
+输入: nums = [5,7,7,8,8,10], target = 6
+输出: 0
+```
+
+**限制：**
+
+- 0 <= 数组长度 <= 50000
+
+
+**解法：**
+
+双二分
+
+```java
+class Solution {
+    public int search(int[] nums, int target) {
+        if (nums.length == 0) return 0;
+        int left = leftSearch(nums, target);
+        int right = rightSearch(nums, target);
+        if (left == -1 || right == -1) return 0;
+        return right - left + 1;
+    }
+
+    private int leftSearch(int[] nums, int target) {
+        int left = 0, right = nums.length - 1;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            if (nums[mid] >= target)
+                right = mid - 1;
+            else left = mid + 1;
+        }
+        if (left >= nums.length) return -1;
+        return (nums[left] == target) ? left : -1;
+    }
+
+    private int rightSearch(int[] nums, int target) {
+        int left = 0, right = nums.length - 1;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            if (nums[mid] <= target)
+                left = mid + 1;
+            else right = mid - 1;
+        }
+        if (right < 0) return -1;
+        return (nums[right] == target) ? right : -1;
+    }
+}
+```
+
+## 53-II 0 ~ n-1中缺失的数字
+
+一个长度为n-1的递增排序数组中的所有数字都是唯一的，并且每个数字都在范围0～n-1之内。在范围0～n-1内的n个数字中有且只有一个数字不在该数组中，请找出这个数字。
+
+**示例 1:**
+
+```
+输入: [0,1,3]
+输出: 2
+```
+
+**示例 2:**
+
+```
+输入: [0,1,2,3,4,5,6,7,9]
+输出: 8
+```
+
+**限制：**
+
+- 1 <= 数组长度 <= 10000
+
+**解法：**
+
+我的二分：
+
+```java
+class Solution {
+    public int missingNumber(int[] nums) {
+        if (nums.length == 0) return 0;
+        if (nums[0] == 1) return 0;
+        if (nums[nums.length - 1] == nums.length - 1) return nums.length;
+        int left = 0, right = nums.length;
+        while (left < right) {
+            int mid = left + (right - left) / 2;
+            if (nums[mid] > mid)
+                right = mid - 1;
+            else left = mid + 1;
+        }
+        return (right != nums[right]) ? right : right + 1;
+    }
+}
+```
+
+官方题解的二分：
+
+```java
+class Solution {
+    public int missingNumber(int[] nums) {
+        if (nums.length == 0) return 0;
+        int left = 0, right = nums.length - 1;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            if (nums[mid] == mid)
+                left = mid + 1;
+            else right = mid - 1;
+        }
+        return left;
+    }
+}
+```
+
+## 54 二叉搜索树的第k大结点
+
+给定一棵二叉搜索树，请找出其中第k大的节点。
+
+**示例 1:**
+
+```
+输入: root = [3,1,4,null,2], k = 1
+   3
+  / \
+ 1   4
+  \
+   2
+输出: 4
+```
+
+**解法:**
+
+反向中序遍历，遍历到第k个输出
+
+```java
+class Solution {
+    public int kthLargest(TreeNode root, int k) {
+        Deque<TreeNode> stack = new LinkedList<>();
+        while (true) {
+            while (root != null) {
+                stack.push(root);
+                root = root.right;
+            }
+            if (stack.isEmpty()) break;
+            root = stack.pop();
+            k--;
+            if (k == 0) return root.val;
+            root = root.left;
+        }
+        return -1;
+    }
+}
+```
+
+## 55-I 二叉树的深度
+
+输入一棵二叉树的根节点，求该树的深度。从根节点到叶节点依次经过的节点（含根、叶节点）形成树的一条路径，最长路径的长度为树的深度。
+
+**例如：**
+
+```
+给定二叉树 [3,9,20,null,null,15,7]，
+
+    3
+   / \
+  9  20
+    /  \
+   15   7
+返回它的最大深度 3 。
+```
+
+**提示：**
+
+- 节点总数 <= 10000
+
+**解法：**
+
+```java
+class Solution {
+    public int maxDepth(TreeNode root) {
+        if (root == null) return 0;
+        return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
+    }
+}
+```
+
+## 55-II 平衡二叉树
+
+输入一棵二叉树的根节点，判断该树是不是平衡二叉树。如果某二叉树中任意节点的左右子树的深度相差不超过1，那么它就是一棵平衡二叉树。
+
+**示例 1:**
+
+```
+给定二叉树 [3,9,20,null,null,15,7]
+
+    3
+   / \
+  9  20
+    /  \
+   15   7
+返回 true 。
+```
+
+**示例 2:**
+
+```
+给定二叉树 [1,2,2,3,3,null,null,4,4]
+
+       1
+      / \
+     2   2
+    / \
+   3   3
+  / \
+ 4   4
+返回 false 。
+```
+
+**限制：**
+
+- 1 <= 树的结点个数 <= 10000
+
+**解法：**
+
+在计算高度的同时计算高度差
+
+```java
+class Solution {
+    public boolean isBalanced(TreeNode root) {
+        return recursion(root) != -1;
+    }
+
+    // 求深度的过程中判断深度差
+    public int recursion(TreeNode root) {
+        if (root == null) return 0;
+        int left = recursion(root.left);
+        if (left == -1) return -1;
+        int right = recursion(root.right);
+        if (right == -1) return -1;
+        return Math.abs(left - right) <= 1 ? 
+                Math.max(left, right) + 1 : -1;
+    }
+}
+```
+
