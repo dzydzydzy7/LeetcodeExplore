@@ -3506,3 +3506,192 @@ class Solution {
 }
 ```
 
+## 56-I 数组中数字出现的次数I
+
+一个整型数组 nums 里除两个数字之外，其他数字都出现了两次。请写程序找出这两个只出现一次的数字。要求时间复杂度是O(n)，空间复杂度是O(1)。
+
+**示例 1：**
+
+```
+输入：nums = [4,1,4,6]
+输出：[1,6] 或 [6,1]
+```
+
+**示例 2：**
+
+```
+输入：nums = [1,2,10,4,1,4,3,3]
+输出：[2,10] 或 [10,2]
+```
+
+**限制：**
+
+- 2 <= nums.length <= 10000
+
+**解法：**
+
+一个数字和它本身异或的结果是0，如果只有一个数字出现了一次，那么异或所有数字的到的值就是只出现一次的数字。
+
+本题思路，先全部异或，找出最后一个 1 的位置，再根据该位置是否为 1，将原数组分为两个部分，两部分各有一个数字只出现一次。
+
+```java
+class Solution {
+    public int[] singleNumbers(int[] nums) {
+        int sum = 0;
+        for (int n : nums)
+            sum ^= n;
+        int flag = (-sum) & sum;    //sum二进制1的最低位
+        int[] res = new int[2];
+        for (int n : nums) {
+            if ((flag & n) == 0) res[0] ^= n;
+            else res[1] ^= n;
+        }
+        return res;
+    }
+}
+```
+
+## 56-II 数组中出现的次数II
+
+在一个数组 nums 中除一个数字只出现一次之外，其他数字都出现了三次。请找出那个只出现一次的数字。
+
+**示例 1：**
+
+```
+输入：nums = [3,4,3,3]
+输出：4
+```
+
+**示例 2：**
+
+```
+输入：nums = [9,1,7,9,7,9,7]
+输出：1
+```
+
+**限制：**
+
+- 1 <= nums.length <= 10000
+- 1 <= nums[i] < 2^31
+
+**解法：**
+
+如果一个数字出现3次，它的二进制每一位也出现的3次。如果把所有的出现三次的数字的二进制表示的每一位都分别加起来，那么每一位都能被3整除。 我们把数组中所有的数字的二进制表示的每一位都加起来。如果某一位能被3整除，那么这一位对只出现一次的那个数的这一肯定为0。如果某一位不能被3整除，那么只出现一次的那个数字的该位置一定为1.
+
+```java
+class Solution {
+    public int singleNumber(int[] nums) {
+        int[] bitCount = new int[32];
+        for (int n : nums) {
+            int bitMask = 1;
+            for (int i = 31; i > 0; i--) {
+                if ((n & bitMask) != 0) bitCount[i]++;
+                bitMask = bitMask << 1;
+            }
+        }
+        int res = 0;
+        for (int i = 0; i < 32; i++) {
+            res = res << 1;
+            res += bitCount[i] % 3;
+        }
+        return res;
+    }
+}
+```
+
+## 57-I 和为s的两个数字
+
+输入一个递增排序的数组和一个数字s，在数组中查找两个数，使得它们的和正好是s。如果有多对数字的和等于s，则输出任意一对即可。
+
+**示例 1：**
+
+```
+输入：nums = [2,7,11,15], target = 9
+输出：[2,7] 或者 [7,2]
+```
+
+**示例 2：**
+
+```
+输入：nums = [10,26,30,31,47,60], target = 40
+输出：[10,30] 或者 [30,10]
+```
+
+**限制：**
+
+- 1 <= nums.length <= 10^5
+- 1 <= nums[i] <= 10^6
+
+**解法：**
+
+```java
+class Solution {
+    public int[] twoSum(int[] nums, int target) {
+        int left = 0, right = nums.length - 1;
+        int[] res = new int[2];
+        while (left < right) {
+            if (nums[left] + nums[right] < target) left++;
+            else if (nums[left] + nums[right] > target) right--;
+            else {
+                res[0] = nums[left];
+                res[1] = nums[right];
+                break;
+            }
+        }
+        return res;
+    }
+}
+```
+
+## 57-II 和为s的连续正数序列
+
+输入一个正整数 target ，输出所有和为 target 的连续正整数序列（至少含有两个数）。
+
+序列内的数字由小到大排列，不同序列按照首个数字从小到大排列。
+
+**示例 1：**
+
+```
+输入：target = 9
+输出：[[2,3,4],[4,5]]
+```
+
+**示例 2：**
+
+```
+输入：target = 15
+输出：[[1,2,3,4,5],[4,5,6],[7,8]]
+```
+
+**限制：**
+
+- 1 <= target <= 10^5
+
+**解法：**
+
+```java
+class Solution {
+    public int[][] findContinuousSequence(int target) {
+        List<int[]> list = new ArrayList<>();
+        int left = 1;
+        int right = 1;
+        while(left <= target / 2) {
+            int sum2 = (left + right) * (right - left + 1);
+            if (sum2 == target * 2) {
+                int[] tmp = new int[right - left + 1];
+                for (int i = left; i <= right; i++) {
+                    tmp[i - left] = i;
+                }
+                list.add(tmp);
+                left++;
+            } else if (sum2 >= target * 2) {
+                left++;
+            } else {
+                right++;
+            }
+        }
+        return list.toArray(new int[list.size()][]);
+    }
+}
+```
+
