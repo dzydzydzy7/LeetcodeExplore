@@ -3695,3 +3695,161 @@ class Solution {
 }
 ```
 
+## 58-I 反转单词顺序
+
+输入一个英文句子，翻转句子中单词的顺序，但单词内字符的顺序不变。为简单起见，标点符号和普通字母一样处理。例如输入字符串"I am a student. "，则输出"student. a am I"。
+
+**示例 1：**
+
+```
+输入: "the sky is blue"
+输出: "blue is sky the"
+```
+
+**示例 2：**
+
+```
+输入: "  hello world!  "
+输出: "world! hello"
+解释: 输入字符串可以在前面或者后面包含多余的空格，但是反转后的字符不能包括。
+```
+
+**示例 3：**
+
+```
+输入: "a good   example"
+输出: "example good a"
+解释: 如果两个单词间有多余的空格，将反转后单词间的空格减少到只含一个。
+```
+
+**说明：**
+
+- 无空格字符构成一个单词。
+- 输入字符串可以在前面或者后面包含多余的空格，但是反转后的字符不能包括。
+- 如果两个单词间有多余的空格，将反转后单词间的空格减少到只含一个。
+
+**解法：**
+
+书上的做法是先反转整个句子，再反转每个单词
+
+```java
+class Solution {
+    public String reverseWords(String s) {
+        s = s.trim();
+        String[] ss = s.split("\\s+");
+        StringBuilder sb = new StringBuilder();
+        for (int i = ss.length - 1; i > 0; i--) {
+            sb.append(ss[i]).append(" ");
+        }
+        return sb.append(ss[0]).toString();
+    }
+}
+```
+
+## 58-II 左旋转字符串
+
+字符串的左旋转操作是把字符串前面的若干个字符转移到字符串的尾部。请定义一个函数实现字符串左旋转操作的功能。比如，输入字符串"abcdefg"和数字2，该函数将返回左旋转两位得到的结果"cdefgab"。
+
+**示例 1：**
+
+```
+输入: s = "abcdefg", k = 2
+输出: "cdefgab"
+```
+
+**示例 2：**
+
+```
+输入: s = "lrloseumgh", k = 6
+输出: "umghlrlose"
+```
+
+**限制：**
+
+- 1 <= k < s.length <= 10000
+
+**解法：**
+
+书上的方法是先反转前半部分，再反转后半部分，再整体反转。
+
+我觉得这个题时间和空间复杂度总得有一个O(n)，没什么好写的。
+
+```java
+class Solution {
+    public String reverseLeftWords(String s, int n) {
+        String res = s.substring(n);
+        return res + s.substring(0, n);
+    }
+}
+```
+
+## 59-I 滑动窗口的最大值
+
+给定一个数组 nums 和滑动窗口的大小 k，请找出所有滑动窗口里的最大值。
+
+**示例:**
+
+```
+输入: nums = [1,3,-1,-3,5,3,6,7], 和 k = 3
+输出: [3,3,5,5,6,7] 
+解释: 
+
+  滑动窗口的位置                最大值
+---------------               -----
+[1  3  -1] -3  5  3  6  7       3
+ 1 [3  -1  -3] 5  3  6  7       3
+ 1  3 [-1  -3  5] 3  6  7       5
+ 1  3  -1 [-3  5  3] 6  7       5
+ 1  3  -1  -3 [5  3  6] 7       6
+ 1  3  -1  -3  5 [3  6  7]      7
+```
+
+**提示：**
+
+- 你可以假设 k 总是有效的，在输入数组不为空的情况下，1 ≤ k ≤ 输入数组的大小。
+
+
+**解法：**
+
+使用单调队列
+
+```java
+class MonotonicQueue {  // 单调队列
+    private Deque<Integer> data = new LinkedList<>();
+    public void push(int n) {   // 入队尾，队尾比n小的出队
+        while (!data.isEmpty() && data.peekLast() < n) {
+            data.pollLast();
+        }
+        data.offerLast(n);
+    }
+
+    public int max() {  // 队头元素肯定是最大的
+        return data.peekFirst();
+    }
+
+    public void pop(int n) {    // 如果队头滑出窗口才出队
+        if (!data.isEmpty() && data.peekFirst() == n) {
+            data.pollFirst();
+        }
+    }
+}
+
+public class Solution {
+    public int[] maxSlidingWindow(int[] nums, int k) {
+        if (nums.length == 0) return new int[0];
+        MonotonicQueue queue = new MonotonicQueue();
+        int[] res = new int[nums.length - k + 1];
+        for (int i = 0; i < nums.length; i++) {
+            if(i < k - 1) {
+                queue.push(nums[i]);
+            } else {
+                queue.push(nums[i]);
+                res[i - k + 1] = queue.max();
+                queue.pop(nums[i - k + 1]);
+            }
+        }
+        return res;
+    }
+}
+```
+
