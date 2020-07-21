@@ -3853,3 +3853,154 @@ public class Solution {
 }
 ```
 
+## 59-II 队列的最大值
+
+请定义一个队列并实现函数 max_value 得到队列里的最大值，要求函数max_value、push_back 和 pop_front 的均摊时间复杂度都是O(1)。
+
+若队列为空，pop_front 和 max_value 需要返回 -1
+
+**示例 1：**
+
+```
+输入: 
+["MaxQueue","push_back","push_back","max_value","pop_front","max_value"]
+[[],[1],[2],[],[],[]]
+输出: [null,null,null,2,1,2]
+```
+
+**示例 2：**
+
+```
+输入: 
+["MaxQueue","pop_front","max_value"]
+[[],[],[]]
+输出: [null,-1,-1]
+```
+
+**限制：**
+
+- 1 <= push_back,pop_front,max_value的总操作数 <= 10000
+- 1 <= value <= 10^5
+
+**解法：**
+
+使用一个双端队列实现单调队列，注意入队时是 peekLast 和 pollLast，java的双端队列队头和栈顶都是最左侧，也就是说poll，pop，peek返回的都是最左的元素。
+
+```java
+class MaxQueue {
+    Queue<Integer> data = new LinkedList<>();
+    Deque<Integer> maxumums = new LinkedList<>();
+
+    public MaxQueue() {}
+    
+    public int max_value() {
+        if (maxumums.isEmpty()) return -1;
+        return maxumums.peek();
+    }
+    
+    public void push_back(int value) {
+        while (!maxumums.isEmpty() && maxumums.peekLast() < value) {
+            maxumums.pollLast();
+        }
+        maxumums.offer(value);
+        data.offer(value);
+    }
+    
+    public int pop_front() {
+        if (maxumums.isEmpty()) return -1;
+        int val = data.poll();
+        if (maxumums.peek() == val)
+            maxumums.poll();
+        return val;
+    }
+}
+```
+
+## 60 n个骰子的点数
+
+把n个骰子扔在地上，所有骰子朝上一面的点数之和为s。输入n，打印出s的所有可能的值出现的概率。
+
+你需要用一个浮点数数组返回答案，其中第 i 个元素代表这 n 个骰子所能掷出的点数集合中第 i 小的那个的概率。
+
+**示例 1:**
+
+```
+输入: 1
+输出: [0.16667,0.16667,0.16667,0.16667,0.16667,0.16667]
+```
+
+**示例 2:**
+
+```
+输入: 2
+输出: [0.02778,0.05556,0.08333,0.11111,0.13889,0.16667,0.13889,0.11111,0.08333,0.05556,0.02778]
+```
+
+**限制：**
+
+- 1 <= n <= 11
+
+**解法一：递归**
+
+先求频数，频数 / 总数 = 概率
+
+```java
+class Solution {
+    int[] count;    // 频数
+    int number;
+
+    public double[] twoSum(int n) {
+        this.count = new int[6 * n - n + 1];
+        this.number = n;
+        probability(number, 0);
+        double[] res = new double[count.length];
+        double total = Math.pow(6, n);
+        for (int i = 0; i < count.length; i++)
+            res[i] = count[i] / total;
+        return res;
+    }
+
+    // 参数：还剩几个骰子没投，当前总和
+    private void probability(int n, int sum) {
+        if (n == 0) {
+            count[sum - number] += 1;
+            return;
+        }
+        for (int i = 1; i <= 6; i++) 
+            probability(n - 1, sum + i);
+    }
+}
+```
+
+**解法二：循环**
+
+第 i - 1个骰子投出 n 的频数 = 前 i - 1个骰子投出 n - 1 的频数 + 前 i - 1个骰子投出 n - 2 的频数 + ... + 前 i - 1个骰子投出 n - 6 的频数（前提是 n - 6 是 i - 1 个骰子能投出来的数，比如 6 个骰子投不出 5）
+
+第 i 个骰子只依赖第 i - 1 个的结果，所以只需要两列数组。
+
+```java
+class Solution {
+    public double[] twoSum(int n) {
+        int[][] count = new int[2][6 * n + 1];
+        int flag = 0;
+        for (int i = 1; i <= 6; i++)
+            count[flag][i] = 1;
+        for (int i = 2; i <= n; i++) {
+            for (int j = 0; j < i; j++)
+                count[1 - flag][j] = 0;
+            for (int j = i; j <= 6 * i; j++) {
+                count[1 - flag][j] = 0;
+                for (int k = 1; k <= j && k <= 6; k++)
+                    count[1 - flag][j] += count[flag][j - k];
+            }
+            flag = 1 - flag;
+        }
+        double res[] = new double[6 * n - n + 1];
+        double total = Math.pow(6, n);
+        for (int i = 0; i < res.length; i++)
+            res[i] = count[flag][i + n] / total;
+        return res;
+    }
+}
+```
+
