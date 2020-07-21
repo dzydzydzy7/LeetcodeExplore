@@ -4004,3 +4004,114 @@ class Solution {
 }
 ```
 
+## 61 扑克排中的顺子
+
+从扑克牌中随机抽5张牌，判断是不是一个顺子，即这5张牌是不是连续的。2～10为数字本身，A为1，J为11，Q为12，K为13，而大、小王为 0 ，可以看成任意数字。A 不能视为 14。
+
+**示例 1:**
+
+```
+输入: [1,2,3,4,5]
+输出: True
+```
+
+**示例 2:**
+
+```
+输入: [0,0,1,2,5]
+输出: True
+```
+
+**限制：**
+
+- 数组长度为 5 
+
+- 数组的数取值为 [0, 13] .
+
+
+**解法：**
+
+先排序，如果有两个相同的数字，则肯定不是顺子，然后算排好序的每两张牌之间的间隙，看间隙数是否小于王的数量
+
+```java
+class Solution {
+    public boolean isStraight(int[] nums) {
+        Arrays.sort(nums);
+        int zeroCnt = 0, diff = 0;
+        while (nums[zeroCnt] == 0) zeroCnt++;
+        for (int i = zeroCnt + 1; i < nums.length; i++) {
+            // 有对子就肯定不是顺子
+            if (nums[i] == nums[i - 1]) return false;
+            diff += nums[i] - nums[i - 1] - 1;
+        }
+        return diff <= zeroCnt;
+    }
+}
+```
+
+## 62 圆圈中最后剩下的数字
+
+0,1,,n-1这n个数字排成一个圆圈，从数字0开始，每次从这个圆圈里删除第m个数字。求出这个圆圈里剩下的最后一个数字。
+
+例如，0、1、2、3、4这5个数字组成一个圆圈，从数字0开始每次删除第3个数字，则删除的前4个数字依次是2、0、4、1，因此最后剩下的数字是3。
+
+**示例 1：**
+
+```
+输入: n = 5, m = 3
+输出: 3
+```
+
+**示例 2：**
+
+```
+输入: n = 10, m = 17
+输出: 2
+```
+
+**限制：**
+
+- 1 <= n <= 10^5
+- 1 <= m <= 10^6
+
+**解法：**
+
+这是一个约瑟夫环问题，可以模拟循环链表。
+
+ LinkedList 虽然删除指定节点的时间复杂度是 O(1) 的，但是在 remove 时间复杂度仍然是 O(n) 的，因为需要从头遍历到需要删除的位置。那 ArrayList 呢？索引到需要删除的位置，时间复杂度是 O(1)，删除元素时间复杂度是 O(n)（因为后续元素需要向前移位）， remove 整体时间复杂度是 O(n) 的。
+
+相比于`LinkedList`大量非连续性地址访问，`ArrayList`的性能更好
+
+```java
+class Solution {
+    public int lastRemaining(int n, int m) {
+        ArrayList<Integer> list = new ArrayList<>(n);
+        for (int i = 0; i < n; i++)
+            list.add(i);
+
+        int idx = 0;
+        while (n > 1) {
+            idx = (idx + m - 1) % n;
+            list.remove(idx);
+            n--;
+        }
+        return list.get(0);
+    }
+}
+```
+
+公式法：
+
+*f*(*N*,*M*)=(*f*(*N*−1,*M*)+*M*)%*N*，特别地，当N == 1时，*f(N,M)* = 0。
+
+```java
+class Solution {
+    public int lastRemaining(int n, int m) {
+        int ans = 0;
+        for (int i = 2; i <= n; i++)
+            ans = (ans + m) % i;
+        return ans;
+    }
+}
+```
+
