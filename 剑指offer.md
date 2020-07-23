@@ -4115,3 +4115,119 @@ class Solution {
 }
 ```
 
+## 63 股票的最大利润
+
+假设把某股票的价格按照时间先后顺序存储在数组中，请问买卖该股票一次可能获得的最大利润是多少？
+
+**示例 1:**
+
+```
+输入: [7,1,5,3,6,4]
+输出: 5
+解释: 在第 2 天（股票价格 = 1）的时候买入，在第 5 天（股票价格 = 6）的时候卖出，最大利润 = 6-1 = 5 。
+     注意利润不能是 7-1 = 6, 因为卖出价格需要大于买入价格。
+```
+
+**示例 2:**
+
+```
+输入: [7,6,4,3,1]
+输出: 0
+解释: 在这种情况下, 没有交易完成, 所以最大利润为 0。
+```
+
+**限制：**
+
+- 0 <= 数组长度 <= 10^5
+
+
+**解法：**
+
+如果当前值 - 最小值 > 最大利润，更新最大利润
+
+如果当前值小于最小值，更新最小值
+
+```java
+class Solution {
+    public int maxProfit(int[] prices) {
+        if (prices.length <= 1) return 0;
+        int minn = prices[0], res = 0;
+        for (int i = 1; i < prices.length; i++) {
+            if (prices[i] > minn) res = Math.max(res, prices[i] - minn);
+            if (prices[i] < minn) minn = prices[i];
+        }
+        return res;
+    }
+}
+```
+
+## 64 求1+2+...+n
+
+求 1+2+...+n ，要求不能使用乘除法、for、while、if、else、switch、case等关键字及条件判断语句（A?B:C）。
+
+**示例 1：**
+
+```
+输入: n = 3
+输出: 6
+```
+
+**示例 2：**
+
+```
+输入: n = 9
+输出: 45
+```
+
+**限制：**
+
+- 1 <= n <= 10000
+
+**解法：**
+
+异常+递归，只用递归需要判断边界条件
+
+```java
+class Solution {
+    int[] test=new int[]{0};
+    public int sumNums(int n) {
+        try{
+            return test[n];
+        }catch(Exception e){
+            return n+sumNums(n-1);
+        }
+    }
+}
+```
+
+## 65 不用加减乘除作加法
+
+写一个函数，求两个整数之和，要求在函数体内不得使用 “+”、“-”、“*”、“/” 四则运算符号。
+
+**示例:**
+
+```
+输入: a = 1, b = 1
+输出: 2
+```
+
+**提示：**
+
+- a, b 均可能是负数或 0
+- 结果不会溢出 32 位整数
+
+**解法：**
+
+```java
+class Solution {
+    public int add(int a, int b) {
+        while(b != 0) { // 当进位为 0 时跳出
+            int c = (a & b) << 1;  // c = 进位
+            a ^= b; // a = 非进位和
+            b = c; // b = 进位
+        }
+        return a;
+    }
+}
+```
+
