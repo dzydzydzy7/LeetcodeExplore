@@ -10939,7 +10939,7 @@ for (int c : coins) {	// 对于每一种面值，c是面值，n是目标金额
 
 状态迁移方程：
 
-![](E:/kejian/知识总结/img/37.png)
+![](img/37.png)
 
 完整的解决方法：
 
@@ -11011,7 +11011,7 @@ class Solution {
 
 ## 最大子序和53
 
-![](E:/kejian/知识总结/img/38.jpg)
+![](img/38.jpg)
 
 **解法：**
 
@@ -11142,7 +11142,7 @@ int knapsack(int W, int N, vector<int>& wt, vector<int>& val) {
 
 ## 子集背包·分割等和子集416
 
-![](E:/kejian/知识总结/img/39.jpg)
+![](img/39.jpg)
 
 **分析：**
 
@@ -11210,7 +11210,7 @@ class Solution {
 
 ## 完全背包·零钱兑换II512
 
-![](E:/kejian/知识总结/img/40.jpg)
+![](img/40.jpg)
 
 **分析：**
 
@@ -11278,7 +11278,7 @@ class Solution {
 
 ## 编辑距离72
 
-![](E:/kejian/知识总结/img/41.png)
+![](img/41.png)
 
 **分析：**
 
@@ -11288,7 +11288,7 @@ class Solution {
 
 `dp[i][j]`就是`s1`的前`i`个字母需要几步换到`s2`的前`j`个字母。
 
-![](E:/kejian/知识总结/img/42.jpg)
+![](img/42.jpg)
 
 如果`s1.charAt[i] != s2.charAt[j]`，`dp[i][j] = dp[i - 1][j - 1]`；
 
@@ -11388,7 +11388,7 @@ base case：当只剩一个鸡蛋(k == 1)时需要从上往下试N次，所以`d
 
 当`K >= 2`时，可以先用二分缩小楼层范围，当`k == 1` 时，再从下往上试。
 
-<img src="E:/kejian/知识总结/img/43.jpg" style="zoom:50%;" />
+<img src="img/43.jpg" style="zoom:50%;" />
 
 ```java
 class Solution {
@@ -11414,7 +11414,7 @@ class Solution {
 
 `dp[i][j - k]`、`dp[i - 1][k - 1]`和`Math.max(dp[i][j - k], dp[i - 1][k - 1])`的函数图像如下：
 
-![](E:/kejian/知识总结/img/44.jpg)
+![](img/44.jpg)
 
 所以可以用二分求`Math.max(dp[i][j - k], dp[i - 1][k - 1])`的最小值，`dp[i][j - k] > dp[i - 1][k - 1]`就向右找，反之向左找。
 
@@ -11451,7 +11451,7 @@ class Solution {
 
 ## 戳气球312
 
-![](E:/kejian/知识总结/img/45.jpg)
+![](img/45.jpg)
 
 **分析：**
 
@@ -11467,7 +11467,7 @@ class Solution {
 
 只需要用到上三角矩阵，而且是从下往上dp的。
 
-![](E:/kejian/知识总结/img/46.jpeg)
+![](img/46.jpeg)
 
 **解法：**
 
@@ -11544,7 +11544,7 @@ class Solution {
 
 否则`dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1])`。
 
-![](E:/kejian/知识总结/img/47.png)
+![](E:/kejian/知识总结/leetcode/img/47.png)
 
 **解法：**
 
@@ -11566,7 +11566,7 @@ class Solution {
 
 ## 最长回文子序列516
 
-![](E:/kejian/知识总结/img/48.jpg)
+![](img/48.jpg)
 
 **分析：**
 
@@ -11576,9 +11576,9 @@ class Solution {
 
 `dp[i][j]`就是字符串在`[i, j]`的范围内的最长回文子串长度。
 
-![](E:/kejian/知识总结/img/49.jpg)
+![](img/49.jpg)
 
-![](E:/kejian/知识总结/img/50.jpg)
+![](img/50.jpg)
 
 **解法:**
 
@@ -11607,7 +11607,7 @@ class Solution {
 
 ## 正则表达式匹配10
 
-![](E:/kejian/知识总结/img/51.png)
+![](img/51.png)
 
 **分析：**
 
@@ -11676,7 +11676,7 @@ class Solution {
 
 ## 无重叠区间435
 
-![](E:/kejian/知识总结/img/52.png)
+![](img/52.png)
 
 **解法：**
 
@@ -11707,13 +11707,13 @@ class Solution {
 
 ## 用最少数量的箭引爆气球452
 
-![](E:/kejian/知识总结/img/53.png)
+![](img/53.png)
 
 **分析：**
 
 这个题也是在求无重叠区间的个数，但是区别在于这个题使用的是闭区间，也就是`[1, 2]`和`[2, 3]`是重叠的。
 
-![](E:/kejian/知识总结/img/54.jpg)
+![](img/54.jpg)
 
 **解法 ：**
 
