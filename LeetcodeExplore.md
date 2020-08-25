@@ -10138,6 +10138,85 @@ class Solution {
 }
 ```
 
+## 补充
+
+### 后继者 面试题04.06
+
+设计一个算法，找出二叉搜索树中指定节点的“下一个”节点（也即中序后继）。
+
+如果指定节点没有对应的“下一个”节点，则返回null。
+
+**示例 1:**
+
+```
+输入: root = [2,1,3], p = 1
+
+  2
+ / \
+1   3
+
+输出: 2
+```
+
+**示例 2:**
+
+```
+输入: root = [5,3,6,2,4,null,null,1], p = 6
+
+      5
+     / \
+    3   6
+   / \
+  2   4
+ /   
+1
+
+输出: null
+```
+
+**解法：**
+
+二分，时间复杂度O(logN)
+
+```java
+class Solution {
+    public TreeNode inorderSuccessor(TreeNode root, TreeNode p) {
+        TreeNode res = null;
+        while (root != null) {
+            if (root.val <= p.val) root = root.right;
+            else {
+                res = root;
+                root = root.left;
+            }
+        }
+        return res;
+    }
+}
+```
+
+递归的解法
+
+- 如果 p 大于等于当前节点的值，说明后继节点一定在 RightTree
+- 如果 p 小于当前节点的值，说明后继节点一定在 LeftTree 或自己就是
+  - 递归调用 LeftTree，如果是空的，说明当前节点就是答案
+  - 如果不是空的，则说明在 LeftTree 已经找到合适的答案，直接返回即可
+
+```java
+class Solution {
+    public TreeNode inorderSuccessor(TreeNode root, TreeNode p) {
+        if (root == null) return null;
+        if (root.val <= p.val) return inorderSuccessor(root.right, p);
+        else {
+            TreeNode left = inorderSuccessor(root.left, p);
+            if (left == null) return root;
+            else return left;
+        }
+    }
+}
+```
+
+
+
 # dp
 
 ## 爬楼梯70
@@ -12952,6 +13031,187 @@ class Solution {
             if (board[(i/3)*3 + idx/3][(j/3)*3 + idx%3] == ch) return false;
         }
         return true;
+    }
+}
+```
+
+## 累加数 306
+
+累加数是一个字符串，组成它的数字可以形成累加序列。
+
+一个有效的累加序列必须至少包含 3 个数。除了最开始的两个数以外，字符串中的其他数都等于它之前两个数相加的和。
+
+给定一个只包含数字 '0'-'9' 的字符串，编写一个算法来判断给定输入是否是累加数。
+
+说明: 累加序列里的数不会以 0 开头，所以不会出现 1, 2, 03 或者 1, 02, 3 的情况。
+
+**示例 1:**
+
+```
+输入: "112358"
+输出: true 
+解释: 累加序列为: 1, 1, 2, 3, 5, 8 。1 + 1 = 2, 1 + 2 = 3, 2 + 3 = 5, 3 + 5 = 8
+```
+
+**示例 2:**
+
+```
+输入: "199100199"
+输出: true 
+解释: 累加序列为: 1, 99, 100, 199。1 + 99 = 100, 99 + 100 = 199
+```
+
+**进阶:**
+你如何处理一个溢出的过大的整数输入?
+
+**解法：**
+
+```java
+class Solution {
+    boolean res = false;
+
+    public boolean isAdditiveNumber(String num) {
+        backTrack(num, 0, 0, 0, 0);
+        return res;
+    }
+
+    // 字符串 当前下标 前两个数字的和 前一个数字 当前处理到第几个数字
+    private void backTrack(String num, int idx, long sum, long pre, int k) {
+        if (idx == num.length()) {
+            if (k > 2) res = true;
+            return;
+        }
+        for (int i = idx; i < num.length(); i++) {
+            long cur = getValue(num, idx, i);
+            if (cur < 0) continue;
+            if (k >= 2 && cur != sum) continue;
+            backTrack(num, i + 1, cur + pre, cur, k + 1);
+        }
+    }
+
+    private long getValue(String num, int start, int end) {
+        if (start < end && num.charAt(start) == '0')
+            return -1;
+        long val = 0;
+        for (int i = start; i <= end; i++) {
+            val = val * 10 + num.charAt(i) - '0';
+        }
+        return val;
+    }
+}
+```
+
+## 递增子序列 491
+
+给定一个整型数组, 你的任务是找到所有该数组的递增子序列，递增子序列的长度至少是2。
+
+**示例:**
+
+```
+输入: [4, 6, 7, 7]
+输出: [[4, 6], [4, 7], [4, 6, 7], [4, 6, 7, 7], [6, 7], [6, 7, 7], [7,7], [4,7,7]]
+```
+
+**说明:**
+
+- 给定数组的长度不会超过15。
+- 数组中的整数范围是 [-100,100]。
+- 给定数组中可能包含重复数字，相等的数字应该被视为递增的一种情况。
+
+**解法：**
+
+使用回溯，但有些不同，首先结束的条件不能像组合一样`if (track.size() >= 2) {res.add(new LinkedList(track)); return;}`，这样输出的都是长度为2的；应该运算到最后一个数字，即`cur == nums.length`时，才能添加结果。
+
+回溯的过程：
+
+1. 如果当前数字大于上一个（满足递增），则可以把这个数字加入子序列
+2. 也可以选择不把当前数字加入子序列，但要考虑去重，所以要加一个`nums[cur] != last`的判断，避免出现两个`[4, 7]`之类的情况。
+
+```java
+class Solution {
+    List<List<Integer>> res = new LinkedList<>();
+
+    public List<List<Integer>> findSubsequences(int[] nums) {
+        LinkedList<Integer> track = new LinkedList<>();
+        backTrace(nums, 0, -101, track);
+        return res;
+    }
+
+    private void backTrace(int[] nums, int cur, int last, LinkedList<Integer> track) {
+        if (cur == nums.length) {
+            if (track.size() >= 2) res.add(new LinkedList(track));
+            return;
+        }
+        if (nums[cur] >= last) {
+            track.add(nums[cur]);
+            backTrace(nums, cur + 1, nums[cur], track);
+            track.removeLast();
+        }
+        if (nums[cur] != last) {
+            backTrace(nums, cur + 1, last, track);
+        }
+    }
+}
+```
+
+## 复原IP地址93
+
+给定一个只包含数字的字符串，复原它并返回所有可能的 IP 地址格式。
+
+有效的 IP 地址正好由四个整数（每个整数位于 0 到 255 之间组成），整数之间用 '.' 分隔。
+
+**示例:**
+
+```
+输入: "25525511135"
+输出: ["255.255.11.135", "255.255.111.35"]
+```
+
+**解法：**
+
+细节：非0数字不能以0开头，ip地址不能出现类似 01，001 这样的数字。
+
+如果输入字符串长度大于12，直接返回空数组。
+
+```java
+class Solution {
+    List<String> res = new LinkedList<>();
+    int[] segs = new int[4];
+    String s;
+
+    public List<String> restoreIpAddresses(String s) {
+        if (s.length() > 12) return res;
+        this.s = s;
+        backTrace(0, 0);
+        return res;
+    }
+
+    // 第几个数字，字符串中的下标
+    private void backTrace(int segNum, int index) {
+        if (segNum == 4 && index == s.length()) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < 3; i++) 
+                sb.append(segs[i]).append('.');
+            sb.append(segs[3]);
+            res.add(sb.toString());
+            return;
+        }
+        if (segNum == 4) return;
+        if (segNum != 4 && index == s.length()) return;
+        if (s.charAt(index) == '0') {
+            segs[segNum] = 0;
+            backTrace(segNum + 1, index + 1);
+        }
+        int addr = 0;
+        for (int i = index; i < s.length(); i++) {
+            addr = (s.charAt(i) - '0') + addr * 10;
+            if (addr > 0 && addr <= 255) {
+                segs[segNum] = addr;
+                backTrace(segNum + 1, i + 1);
+            } else {
+                break;
+            }
+        }
     }
 }
 ```
